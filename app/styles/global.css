@@ -1,0 +1,36 @@
+.header-user {
+  --avatar-size: 1.5em;
+  display: flex;
+  gap: 0.2em;
+}
+
+.header-user__avatar {
+  height: var(--avatar-size);
+  width: var(--avatar-size);
+  border-radius: 50%;
+}
+
+button.icon {
+  padding: 0 1ex;
+  background: none;
+  border: none;
+}
+
+.hero--axolotl-blue {
+  /* display: none; */
+  /* background-color: #374956; */
+  background-image: url("/images/Axolotl_DaVinci_blue.png");
+  background-position: center;
+  background-size: cover;
+  aspect-ratio: 1 / 1;
+}
+
+.breadcrumbs > li + li {
+  padding-inline-start: 0;
+}
+
+.breadcrumbs > li + li:before {
+  display: "block";
+  margin-inline-end: var(--nav-element-spacing-horizontal);
+  content: "/";
+}
