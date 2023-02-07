@@ -46,6 +46,19 @@ main.container {
 
 .calendar-day {
   --avatar-size: 1.5em;
+  margin: auto;
+  width: 50ch;
+}
+
+.calendar-day > li {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.calendar-day form {
+  margin: 0;
 }
 
 .calendar-people {
@@ -66,4 +79,12 @@ main.container {
   display: inline-block;
   text-align: end;
   width: 2ch;
+}
+
+.day__book {
+  display: inline-block;
+  margin: 0;
+  width: auto;
+  padding: 0.3rem;
+  line-height: 20px;
 }

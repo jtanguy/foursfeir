@@ -6,11 +6,11 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: "http://localhost:3000",
-      },
+      // options: {
+      //   redirectTo: "http://localhost:3000",
+      // },
     });
-    console.log({ data, error });
+    // console.log({ data, error });
   };
   return (
     <main className="container">
