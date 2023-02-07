@@ -1,6 +1,6 @@
 import type { LoaderFunction } from "@remix-run/node";
 import { json, Response } from "@remix-run/node";
-import { Link, useLoaderData, useParams } from "@remix-run/react";
+import { Link, Outlet, useLoaderData } from "@remix-run/react";
 import { createServerClient } from "utils/supabase.server";
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -25,30 +25,18 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 };
 
 export default function City() {
-  const { city: slug } = useParams();
   const { city: label } = useLoaderData<typeof loader>();
 
   return (
     <>
-      <nav className="container-fluid">
-        <ul className="breadcrumbs">
-          <li>
-            <Link to="/">FourSFEIR</Link>
-          </li>
-          <li>
-            <Link to={`/${slug}`}>{label}</Link>
-          </li>
-        </ul>
-        <ul>
-          <li>
-            <Link to="/">Logout</Link>
-          </li>
-        </ul>
-      </nav>
       <main className="container">
         <h1> Réservations à {label}</h1>
+        <Outlet />
       </main>
-      <footer className="container"></footer>
     </>
   );
 }
+
+export const handle = {
+  breadcrumb: (match) => <Link to={match.pathname}>{match.params.city}</Link>,
+};

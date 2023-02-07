@@ -1,16 +1,21 @@
 .header-user {
   --avatar-size: 1.5em;
   display: flex;
-  gap: 0.2em;
+  gap: 0.3em;
 }
 
-.header-user__avatar {
+.header-user__name {
+  flex: 1 0 auto;
+}
+
+.avatar {
   height: var(--avatar-size);
   width: var(--avatar-size);
   border-radius: 50%;
 }
 
 button.icon {
+  --line-height: 1rem;
   padding: 0 1ex;
   background: none;
   border: none;
@@ -33,4 +38,32 @@ button.icon {
   display: "block";
   margin-inline-end: var(--nav-element-spacing-horizontal);
   content: "/";
+}
+
+main.container {
+  min-height: 60vh;
+}
+
+.calendar-day {
+  --avatar-size: 1.5em;
+}
+
+.calendar-people {
+  display: inline;
+}
+
+.calendar-people li {
+  display: inline;
+  list-style: none;
+}
+
+.day__name {
+  display: inline-block;
+  width: 2ch;
+}
+
+.day__number {
+  display: inline-block;
+  text-align: end;
+  width: 2ch;
 }

@@ -15,22 +15,10 @@ export default function Index() {
           <h1>Welcome to FourSFEIR</h1>
           <ul>
             <li>
-              <a
-                target="_blank"
-                href="https://remix.run/tutorials/blog"
-                rel="noreferrer"
-              >
-                15m Quickstart Blog Tutorial
-              </a>
+              <Link to="/login">Login</Link>
             </li>
             <li>
-              <a
-                target="_blank"
-                href="https://remix.run/tutorials/jokes"
-                rel="noreferrer"
-              >
-                Deep Dive Jokes App Tutorial
-              </a>
+              <Link to="/nantes">Nantes</Link>
             </li>
             <li>
               <a target="_blank" href="https://remix.run/docs" rel="noreferrer">

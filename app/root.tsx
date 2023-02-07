@@ -7,6 +7,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
+import { toTemporalInstant } from "@js-temporal/polyfill";
 
 import picoStyles from "@picocss/pico/css/pico.min.css";
 import globalStyles from "~/styles/global.css";
@@ -21,6 +22,12 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: picoStyles },
   { rel: "stylesheet", href: globalStyles },
 ];
+
+// eslint-disable-next-line no-extend-native
+Object.defineProperty(Date.prototype, "toTemporalInstant", {
+  value: toTemporalInstant,
+  writable: false,
+});
 
 export default function App() {
   return (
