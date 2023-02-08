@@ -1,13 +1,12 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { ActionArgs, LoaderArgs, redirect } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useLoaderData, useParams } from "@remix-run/react";
 import { createServerClient } from "utils/supabase.server";
 import cx from "classnames";
-import { zfd } from "zod-form-data";
-import { z } from "zod";
 
-import { FiMinusCircle, FiPlusCircle } from "react-icons/fi";
+import { FiMinus, FiPlus, FiEdit, FiEye } from "react-icons/fi";
+import { useState } from "react";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const response = new Response();
@@ -32,61 +31,47 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   });
 };
 
-const schema = zfd.formData({
-  date: zfd.text(),
-  action: zfd.text(z.enum(["book", "remove"])),
-});
-
-export const action = async ({ request, params }: ActionArgs) => {
-  const response = new Response();
-  const supabase = createServerClient({ request, response });
-
-  const { action, date } = await schema.parse(await request.formData());
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) throw redirect("/login");
-
-  if (action === "book") {
-    await supabase
-      .from("bookings")
-      .insert([{ city: params.city, date: date, user_id: user.id }]);
-  } else {
-    await supabase.from("bookings").delete().match({
-      user_id: user.id,
-      city: params.city,
-      date: date,
-    });
-  }
-  return null;
-};
-
-export default function CurrentMonth() {
-  const today = Temporal.Now.plainDateISO();
-  const currentMonth = today.toPlainYearMonth();
-
-  const days = Array.from(
-    { length: currentMonth.daysInMonth },
-    (_, i) => i + 1
-  ).map((day) => currentMonth.toPlainDate({ day }));
-
+export default function Current() {
+  const { city } = useParams();
   const { bookings, capacity, user } = useLoaderData<typeof loader>();
+
+  const today = Temporal.Now.plainDateISO();
+  const startOfWeek = today.subtract({ days: today.dayOfWeek - 1 });
+
+  const days = Array.from({ length: 14 }, (_, i) => i).map((n) =>
+    startOfWeek.add({ days: n })
+  );
+
+  const [edit, setEdit] = useState(false);
+
+  const toggleEdit = () => setEdit((e) => !e);
 
   return (
     <>
+      <button type="button" onClick={toggleEdit}>
+        {edit ? (
+          <>
+            <FiEye /> Visualiser
+          </>
+        ) : (
+          <>
+            <FiEdit /> Éditer
+          </>
+        )}
+      </button>
       {days.map((day) => {
         const key = day.toString();
         const people = bookings.filter(({ date }) => date === key);
         const hasBooking = people.some((p) => p.profiles.id === user.id);
         const isWeekDay = day.dayOfWeek < 6;
+        const isToday = Temporal.PlainDate.compare(day, today) === 0;
         const isFuture = Temporal.PlainDate.compare(day, today) > 0;
         return (
           <article
             key={key}
             className={cx("calendar-day", {
               "calendar-day--full": people.length === capacity,
+              "calendar-day--today": isToday,
             })}
           >
             <span className="day__name">
@@ -98,7 +83,7 @@ export default function CurrentMonth() {
             {isWeekDay && (
               <>
                 {isFuture ? (
-                  <Form method="post">
+                  <Form method="post" action={`/${city}`}>
                     <input type="hidden" name="date" value={key} />
                     <input
                       type="hidden"
@@ -117,9 +102,11 @@ export default function CurrentMonth() {
                         </li>
                       ))}
                     </ul>
-                    <button className="day__book">
-                      {hasBooking ? <FiMinusCircle /> : <FiPlusCircle />}
-                    </button>
+                    {edit && (
+                      <button className="day__book">
+                        {hasBooking ? <FiMinus /> : <FiPlus />}
+                      </button>
+                    )}
                   </Form>
                 ) : (
                   <ul className="calendar-people">

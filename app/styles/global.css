@@ -44,7 +44,13 @@ main.container {
   --block-spacing-horizontal: 0.5em;
   position: relative;
   margin-inline: auto;
+  overflow: hidden;
   max-width: 50ch;
+}
+
+.calendar-day--today {
+  --card-background-color: var(--primary-focus);
+  border-inline-start: 0.2rem solid var(--primary-hover);
 }
 
 .calendar-day__gauge {
@@ -87,7 +93,6 @@ main.container {
 }
 
 .day__book {
-  --border-radius: 50%;
   margin: 0;
   display: inline-block;
   box-sizing: content-box;

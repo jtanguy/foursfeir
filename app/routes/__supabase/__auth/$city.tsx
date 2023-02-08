@@ -1,6 +1,9 @@
-import type { LoaderFunction } from "@remix-run/node";
+import type { ActionArgs, LoaderFunction } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import { json, Response } from "@remix-run/node";
 import { Link, Outlet, useLoaderData } from "@remix-run/react";
+import { zfd } from "zod-form-data";
+import { z } from "zod";
 import { createServerClient } from "utils/supabase.server";
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -22,6 +25,37 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   return json({
     city: data[0].label ?? params.slug,
   });
+};
+
+const schema = zfd.formData({
+  date: zfd.text(),
+  action: zfd.text(z.enum(["book", "remove"])),
+});
+
+export const action = async ({ request, params }: ActionArgs) => {
+  const response = new Response();
+  const supabase = createServerClient({ request, response });
+
+  const { action, date } = await schema.parse(await request.formData());
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw redirect("/login");
+
+  if (action === "book") {
+    await supabase
+      .from("bookings")
+      .insert([{ city: params.city, date: date, user_id: user.id }]);
+  } else {
+    await supabase.from("bookings").delete().match({
+      user_id: user.id,
+      city: params.city,
+      date: date,
+    });
+  }
+  return null;
 };
 
 export default function City() {
