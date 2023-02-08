@@ -50,7 +50,7 @@ main.container {
   --block-spacing-horizontal: 0.5em;
   position: relative;
   margin-inline: auto;
-  width: 50ch;
+  max-width: 50ch;
 }
 
 .calendar-day__gauge {
@@ -96,6 +96,8 @@ main.container {
   height: 20px;
   width: auto;
   padding: 0.3rem;
+  font-size: 20px;
+  line-height: 20px;
 }
 .day__book svg {
   vertical-align: top;
