@@ -4,13 +4,9 @@ import type { AuthContext } from "../__supabase";
 export default function Login() {
   const { supabase } = useOutletContext<AuthContext>();
   const handleGoogleLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    await supabase.auth.signInWithOAuth({
       provider: "google",
-      // options: {
-      //   redirectTo: "http://localhost:3000",
-      // },
     });
-    // console.log({ data, error });
   };
   return (
     <main className="container">

@@ -46,23 +46,35 @@ main.container {
 
 .calendar-day {
   --avatar-size: 1.5em;
-  margin: auto;
+  --block-spacing-vertical: 0.5em;
+  --block-spacing-horizontal: 0.5em;
+  position: relative;
+  margin-inline: auto;
   width: 50ch;
 }
 
-.calendar-day > li {
-  list-style: none;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+.calendar-day__gauge {
+  --border-radius: 0;
+  margin-bottom: 0;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0.2rem;
 }
 
 .calendar-day form {
   margin: 0;
+  padding: 1ex;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
 }
 
 .calendar-people {
-  display: inline;
+  flex: 1 0 auto;
+  margin: 0;
 }
 
 .calendar-people li {
@@ -72,19 +84,19 @@ main.container {
 
 .day__name {
   display: inline-block;
-  width: 2ch;
-}
-
-.day__number {
-  display: inline-block;
-  text-align: end;
-  width: 2ch;
+  /* text-align: end; */
+  width: 8ch;
 }
 
 .day__book {
-  display: inline-block;
+  --border-radius: 50%;
   margin: 0;
+  display: inline-block;
+  box-sizing: content-box;
+  height: 20px;
   width: auto;
   padding: 0.3rem;
-  line-height: 20px;
+}
+.day__book svg {
+  vertical-align: top;
 }
