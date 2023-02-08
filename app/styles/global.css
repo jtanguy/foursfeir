@@ -53,6 +53,13 @@ main.container {
   border-inline-start: 0.2rem solid var(--primary-hover);
 }
 
+.calendar-edit {
+  position: sticky;
+  bottom: 1rem;
+  margin-inline: auto;
+  max-width: 50ch;
+}
+
 .calendar-day__gauge {
   --border-radius: 0;
   margin-bottom: 0;
@@ -104,4 +111,13 @@ main.container {
 }
 .day__book svg {
   vertical-align: top;
+}
+
+.loading {
+  animation: rotate 1.5s linear infinite;
+}
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
 }
