@@ -64,11 +64,13 @@ export const action = async ({ request, params }: ActionArgs) => {
 };
 
 export default function CurrentMonth() {
-  const today = Temporal.Now.plainDateISO().toPlainYearMonth();
+  const today = Temporal.Now.plainDateISO();
+  const currentMonth = today.toPlainYearMonth();
 
-  const days = Array.from({ length: today.daysInMonth }, (_, i) => i + 1).map(
-    (day) => today.toPlainDate({ day })
-  );
+  const days = Array.from(
+    { length: currentMonth.daysInMonth },
+    (_, i) => i + 1
+  ).map((day) => currentMonth.toPlainDate({ day }));
 
   const { bookings, capacity, user } = useLoaderData<typeof loader>();
 
@@ -79,6 +81,7 @@ export default function CurrentMonth() {
         const people = bookings.filter(({ date }) => date === key);
         const hasBooking = people.some((p) => p.profiles.id === user.id);
         const isWeekDay = day.dayOfWeek < 6;
+        const isFuture = Temporal.PlainDate.compare(day, today) > 0;
         return (
           <article
             key={key}
@@ -93,35 +96,54 @@ export default function CurrentMonth() {
               })}
             </span>{" "}
             {isWeekDay && (
-              <Form method="post">
-                <input type="hidden" name="date" value={key} />
-                <input
-                  type="hidden"
-                  name="action"
-                  value={hasBooking ? "remove" : "book"}
-                />
-                <ul className="calendar-people">
-                  {people.map((person) => (
-                    <li key={person.profiles?.id}>
-                      <img
-                        className="avatar"
-                        referrerPolicy="no-referrer"
-                        alt={person.profiles?.full_name}
-                        src={person.profiles?.avatar_url}
-                      />
-                    </li>
-                  ))}
-                </ul>
-                <button className="day__book">
-                  {hasBooking ? <FiMinusCircle /> : <FiPlusCircle />}
-                </button>
-              </Form>
+              <>
+                {isFuture ? (
+                  <Form method="post">
+                    <input type="hidden" name="date" value={key} />
+                    <input
+                      type="hidden"
+                      name="action"
+                      value={hasBooking ? "remove" : "book"}
+                    />
+                    <ul className="calendar-people">
+                      {people.map((person) => (
+                        <li key={person.profiles?.id}>
+                          <img
+                            className="avatar"
+                            referrerPolicy="no-referrer"
+                            alt={person.profiles?.full_name}
+                            src={person.profiles?.avatar_url}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                    <button className="day__book">
+                      {hasBooking ? <FiMinusCircle /> : <FiPlusCircle />}
+                    </button>
+                  </Form>
+                ) : (
+                  <ul className="calendar-people">
+                    {people.map((person) => (
+                      <li key={person.profiles?.id}>
+                        <img
+                          className="avatar"
+                          referrerPolicy="no-referrer"
+                          alt={person.profiles?.full_name}
+                          src={person.profiles?.avatar_url}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
             )}
-            <progress
-              value={people.length}
-              max={capacity}
-              className="calendar-day__gauge"
-            />
+            {isWeekDay && (
+              <progress
+                value={people.length}
+                max={capacity}
+                className="calendar-day__gauge"
+              />
+            )}
           </article>
         );
       })}

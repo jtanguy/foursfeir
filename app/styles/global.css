@@ -65,15 +65,17 @@ main.container {
 
 .calendar-day form {
   margin: 0;
-  padding: 1ex;
   width: 100%;
   height: 100%;
   display: flex;
+  align-items: center;
   justify-content: space-between;
 }
 
 .calendar-people {
   flex: 1 0 auto;
+  padding: 1ex;
+  min-height: calc(1.5 * var(--avatar-size));
   margin: 0;
 }
 
@@ -84,8 +86,10 @@ main.container {
 
 .day__name {
   display: inline-block;
-  /* text-align: end; */
   width: 8ch;
+  font-family: monospace;
+  font-variant: small-caps;
+  text-transform: capitalize;
 }
 
 .day__book {
