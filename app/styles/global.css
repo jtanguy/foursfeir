@@ -30,14 +30,8 @@ button.icon {
   aspect-ratio: 1 / 1;
 }
 
-.breadcrumbs > li + li {
-  padding-inline-start: 0;
-}
-
-.breadcrumbs > li + li:before {
-  display: "block";
-  margin-inline-end: var(--nav-element-spacing-horizontal);
-  content: "/";
+.header[aria-label="breadcrumb"] {
+  justify-content: space-between;
 }
 
 main.container {

@@ -32,8 +32,8 @@ export default function WithAuth() {
   const logout = () => supabase.auth.signOut();
   return (
     <>
-      <nav className="container-fluid">
-        <ul className="breadcrumbs">
+      <nav className="header container-fluid" aria-label="breadcrumb">
+        <ul>
           <li>
             <Link to="/">FourSFEIR</Link>
           </li>
