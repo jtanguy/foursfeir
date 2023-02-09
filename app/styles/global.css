@@ -31,8 +31,6 @@ button.icon {
 }
 
 .hero--axolotl-blue {
-  /* display: none; */
-  /* background-color: #374956; */
   background-image: url("/images/Axolotl_DaVinci_blue.png");
   background-position: center;
   background-size: cover;
@@ -78,6 +76,11 @@ main.container {
   left: 0;
   right: 0;
   height: 0.2rem;
+}
+
+.calendar-day--full .calendar-day__gauge::-moz-progress-bar,
+.calendar-day--full .calendar-day__gauge::-webkit-progress-value {
+  background: var(--form-element-invalid-border-color);
 }
 
 .calendar-day form {
