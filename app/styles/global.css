@@ -1,3 +1,9 @@
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .header-flex {
   display: flex;
   flex-direction: row;
@@ -44,7 +50,7 @@ button.icon {
 }
 
 main.container {
-  min-height: 60vh;
+  flex: 1 0 auto;
 }
 
 .calendar-day {
@@ -125,13 +131,4 @@ main.container {
 }
 .day__book svg {
   vertical-align: top;
-}
-
-.loading {
-  animation: rotate 1.5s linear infinite;
-}
-@keyframes rotate {
-  to {
-    transform: rotate(360deg);
-  }
 }

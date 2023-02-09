@@ -70,13 +70,9 @@ export function CalendarDay({
                 ))}
               </ul>
               {edit && (
-                <button className="day__book">
-                  {isSubmitting ? (
-                    <FiLoader className="loading" />
-                  ) : hasBooking ? (
-                    <FiMinus />
-                  ) : (
-                    <FiPlus />
+                <button className="day__book" aria-busy={isSubmitting}>
+                  {!isSubmitting && (
+                    <>{hasBooking ? <FiMinus /> : <FiPlus />}</>
                   )}
                 </button>
               )}
