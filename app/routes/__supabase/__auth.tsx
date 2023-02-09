@@ -33,18 +33,21 @@ export default function WithAuth() {
   return (
     <>
       <nav className="header container-fluid" aria-label="breadcrumb">
-        <ul>
-          <li>
-            <Link to="/">FourSFEIR</Link>
-          </li>
-          {matches
-            // skip routes that don't have a breadcrumb
-            .filter((match) => match.handle && match.handle.breadcrumb)
-            // render breadcrumbs!
-            .map((match, index) => (
-              <li key={index}>{match.handle?.breadcrumb(match)}</li>
-            ))}
-        </ul>
+        <div className="header-flex">
+          <img className="header-logo" alt="" src="/Foursfeir.png" />
+          <ul>
+            <li>
+              <Link to="/">FourSFEIR</Link>
+            </li>
+            {matches
+              // skip routes that don't have a breadcrumb
+              .filter((match) => match.handle && match.handle.breadcrumb)
+              // render breadcrumbs!
+              .map((match, index) => (
+                <li key={index}>{match.handle?.breadcrumb(match)}</li>
+              ))}
+          </ul>
+        </div>
         <ul>
           <li>
             <div className="header-user">

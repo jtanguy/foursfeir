@@ -6,7 +6,10 @@ export default function Index() {
       <nav className="container-fluid">
         <ul>
           <li>
-            <Link to="/">FourSFEIR</Link>
+            <Link to="/">
+              <img className="header-logo" alt="" src="/Foursfeir.png" />
+              FourSFEIR
+            </Link>
           </li>
         </ul>
       </nav>
