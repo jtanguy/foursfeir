@@ -1,37 +1,38 @@
-import { Link } from "@remix-run/react";
+import type { LoaderArgs, LoaderFunction } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import { Link, useLoaderData } from "@remix-run/react";
+import { FiLogOut } from "react-icons/fi";
+import { createServerClient } from "utils/supabase.server";
+import { useSupabase } from "../__supabase";
+
+export const loader = async ({ request }: LoaderArgs) => {
+  const response = new Response();
+  const supabase = createServerClient({ request, response });
+
+  const { data } = await supabase.from("cities").select("slug, label");
+
+  return json({
+    cities: data ?? [],
+  });
+};
 
 export default function Index() {
+  const { cities } = useLoaderData<typeof loader>();
+
   return (
     <>
-      <nav className="container-fluid">
-        <ul>
-          <li>
-            <Link to="/">
-              <img className="header-logo" alt="" src="/Foursfeir.png" />
-              FourSFEIR
-            </Link>
-          </li>
-        </ul>
-      </nav>
       <main className="container">
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
           <h1>Welcome to FourSFEIR</h1>
           <ul>
-            <li>
-              <Link to="/login">Login</Link>
-            </li>
-            <li>
-              <Link to="/nantes">Nantes</Link>
-            </li>
-            <li>
-              <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-                Remix Docs
-              </a>
-            </li>
+            {cities.map((city) => (
+              <li key={city.slug}>
+                <Link to={`/${city.slug}`}>{city.label}</Link>
+              </li>
+            ))}
           </ul>
         </div>
       </main>
-      <footer className="container"></footer>
     </>
   );
 }

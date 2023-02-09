@@ -1,11 +1,10 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Form, useLoaderData, useParams } from "@remix-run/react";
+import { useLoaderData, useParams } from "@remix-run/react";
 import { createServerClient } from "utils/supabase.server";
-import cx from "classnames";
 
-import { FiMinus, FiPlus, FiEdit, FiEye } from "react-icons/fi";
+import { FiEdit, FiEye } from "react-icons/fi";
 import { useState } from "react";
 import { CalendarDay } from "~/components/CalendarDay";
 
