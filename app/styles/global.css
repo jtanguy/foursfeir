@@ -53,7 +53,6 @@ main.container {
   --block-spacing-horizontal: 0.5em;
   position: relative;
   margin-inline: auto;
-  overflow: hidden;
   max-width: 50ch;
 }
 
@@ -103,6 +102,7 @@ main.container {
 .calendar-people li {
   display: inline;
   list-style: none;
+  border-bottom: none;
 }
 
 .day__name {

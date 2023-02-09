@@ -56,7 +56,10 @@ export function CalendarDay({
               />
               <ul className="calendar-people">
                 {people.map((person) => (
-                  <li key={person.profiles?.id}>
+                  <li
+                    key={person.profiles?.id}
+                    data-tooltip={person.profiles?.full_name}
+                  >
                     <img
                       className="avatar"
                       referrerPolicy="no-referrer"
@@ -87,6 +90,7 @@ export function CalendarDay({
                     referrerPolicy="no-referrer"
                     alt={person.profiles?.full_name}
                     src={person.profiles?.avatar_url}
+                    data-tooltip={person.profiles?.full_name}
                   />
                 </li>
               ))}

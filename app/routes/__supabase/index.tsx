@@ -23,7 +23,10 @@ export default function Index() {
     <>
       <main className="container">
         <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
-          <h1>Welcome to FourSFEIR</h1>
+          <hgroup>
+            <h1>Welcome to FourSFEIR</h1>
+            <h2>Si vous avez la référence, félicitations vous êtes vieux</h2>
+          </hgroup>
           <ul>
             {cities.map((city) => (
               <li key={city.slug}>
