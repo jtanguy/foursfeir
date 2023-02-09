@@ -25,7 +25,7 @@ export function CalendarDay({
   const isWeekDay = date.dayOfWeek < 6;
   const today = Temporal.Now.plainDateISO();
   const isToday = Temporal.PlainDate.compare(date, today) === 0;
-  const isFuture = Temporal.PlainDate.compare(date, today) > 0;
+  const isFuture = Temporal.PlainDate.compare(date, today) >= 0;
 
   const fetcher = useFetcher();
 
