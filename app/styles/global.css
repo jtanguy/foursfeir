@@ -68,6 +68,10 @@ main.container {
   border-inline-start: 0.2rem solid var(--primary-hover);
 }
 
+.calendar-day--end-of-week + .calendar-day {
+  margin-block-start: 3em;
+}
+
 .calendar-edit {
   position: sticky;
   bottom: 1rem;

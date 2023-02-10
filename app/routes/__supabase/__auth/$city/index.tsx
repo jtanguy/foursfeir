@@ -2,6 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import type { LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, useParams } from "@remix-run/react";
+import cx from "classnames";
 import { createServerClient } from "utils/supabase.server";
 
 import { CalendarDay } from "~/components/CalendarDay";
@@ -36,9 +37,9 @@ export default function Current() {
   const today = Temporal.Now.plainDateISO();
   const startOfWeek = today.subtract({ days: today.dayOfWeek - 1 });
 
-  const days = Array.from({ length: 14 }, (_, i) => i).map((n) =>
-    startOfWeek.add({ days: n })
-  );
+  const days = Array.from({ length: 14 }, (_, i) => i)
+    .map((n) => startOfWeek.add({ days: n }))
+    .filter((d) => d.dayOfWeek < 6);
 
   return (
     <>
@@ -48,6 +49,7 @@ export default function Current() {
         return (
           <CalendarDay
             key={day.toString()}
+            className={cx({ "calendar-day--end-of-week": day.dayOfWeek === 5 })}
             date={day}
             people={people!}
             userId={user!.id}
