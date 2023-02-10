@@ -53,7 +53,7 @@ export function CalendarDay({ date, people, userId, city, capacity }: Props) {
                     key={person.profiles?.id}
                     data-tooltip={
                       person.profiles.id === userId
-                        ? "Cliquez pour vous désinscrire"
+                        ? "Se désinscrire"
                         : person.profiles?.full_name
                     }
                     data-placement={
