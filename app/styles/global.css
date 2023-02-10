@@ -114,6 +114,8 @@ main.container {
   margin: 0;
   border: none;
   background: none;
+  --color: var(--color); /* To override a change in the inherited button color*/
+  color: var(--color);
   padding: 0;
   font-size: 1em;
   line-height: 1em;
