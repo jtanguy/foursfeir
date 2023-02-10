@@ -4,8 +4,6 @@ import { json } from "@remix-run/node";
 import { useLoaderData, useParams } from "@remix-run/react";
 import { createServerClient } from "utils/supabase.server";
 
-import { FiEdit, FiEye } from "react-icons/fi";
-import { useState } from "react";
 import { CalendarDay } from "~/components/CalendarDay";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
@@ -42,10 +40,6 @@ export default function Current() {
     startOfWeek.add({ days: n })
   );
 
-  const [edit, setEdit] = useState(false);
-
-  const toggleEdit = () => setEdit((e) => !e);
-
   return (
     <>
       {days.map((day) => {
@@ -56,24 +50,12 @@ export default function Current() {
             key={day.toString()}
             date={day}
             people={people!}
-            edit={edit}
             userId={user!.id}
             city={city!}
             capacity={capacity}
           />
         );
       })}
-      <button className="calendar-edit" type="button" onClick={toggleEdit}>
-        {edit ? (
-          <>
-            <FiEye /> Valider
-          </>
-        ) : (
-          <>
-            <FiEdit /> Éditer
-          </>
-        )}
-      </button>
     </>
   );
 }

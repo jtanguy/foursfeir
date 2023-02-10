@@ -3,24 +3,16 @@ import { useFetcher } from "@remix-run/react";
 import cx from "classnames";
 
 import { Database } from "db_types";
-import { FiLoader, FiMinus, FiPlus } from "react-icons/fi";
+import { BsPlusCircleDotted } from "react-icons/bs";
 
 type Props = {
   date: Temporal.PlainDate;
   people: Database["public"]["Tables"]["profiles"]["Row"][];
-  edit: boolean;
   userId: string;
   city: string;
   capacity: number;
 };
-export function CalendarDay({
-  date,
-  people,
-  edit,
-  userId,
-  city,
-  capacity,
-}: Props) {
+export function CalendarDay({ date, people, userId, city, capacity }: Props) {
   const hasBooking = people.some((p) => p.profiles.id === userId);
   const isWeekDay = date.dayOfWeek < 6;
   const today = Temporal.Now.plainDateISO();
@@ -37,6 +29,7 @@ export function CalendarDay({
         "calendar-day--full": people.length === capacity,
         "calendar-day--today": isToday,
       })}
+      aria-busy={isSubmitting}
     >
       <span className="day__name">
         {date.toLocaleString("fr-FR", {
@@ -58,24 +51,42 @@ export function CalendarDay({
                 {people.map((person) => (
                   <li
                     key={person.profiles?.id}
-                    data-tooltip={person.profiles?.full_name}
+                    data-tooltip={
+                      person.profiles.id === userId
+                        ? "Cliquez pour vous désinscrire"
+                        : person.profiles?.full_name
+                    }
+                    data-placement={
+                      person.profiles.id === userId ? "bottom" : "top"
+                    }
                   >
-                    <img
-                      className="avatar"
-                      referrerPolicy="no-referrer"
-                      alt={person.profiles?.full_name}
-                      src={person.profiles?.avatar_url}
-                    />
+                    {person.profiles.id === userId ? (
+                      <button className="calendar-people__book-self">
+                        <img
+                          className="avatar"
+                          referrerPolicy="no-referrer"
+                          alt={person.profiles?.full_name}
+                          src={person.profiles?.avatar_url}
+                        />
+                      </button>
+                    ) : (
+                      <img
+                        className="avatar"
+                        referrerPolicy="no-referrer"
+                        alt={person.profiles?.full_name}
+                        src={person.profiles?.avatar_url}
+                      />
+                    )}
                   </li>
                 ))}
+                {!hasBooking && (
+                  <li>
+                    <button className="calendar-people__book-self">
+                      <BsPlusCircleDotted />
+                    </button>
+                  </li>
+                )}
               </ul>
-              {edit && (
-                <button className="day__book" aria-busy={isSubmitting}>
-                  {!isSubmitting && (
-                    <>{hasBooking ? <FiMinus /> : <FiPlus />}</>
-                  )}
-                </button>
-              )}
             </fetcher.Form>
           ) : (
             <ul className="calendar-people">

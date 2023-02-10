@@ -28,6 +28,7 @@ body {
   height: var(--avatar-size);
   width: var(--avatar-size);
   border-radius: 50%;
+  vertical-align: text-top;
 }
 
 button.icon {
@@ -99,10 +100,28 @@ main.container {
 }
 
 .calendar-people {
+  --line-height: var(--avatar-size);
   flex: 1 0 auto;
   padding: 1ex;
   min-height: calc(1.5 * var(--avatar-size));
   margin: 0;
+  font-size: var(--avatar-size);
+}
+
+.calendar-people__book-self {
+  display: inline;
+  width: auto;
+  margin: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 1em;
+  line-height: 1em;
+}
+
+.calendar-people__book-self svg {
+  margin-top: -1px; /* MAGIC NUMBER to align with avatars*/
+  font-size: var(--avatar-size);
 }
 
 .calendar-people li {
@@ -110,10 +129,12 @@ main.container {
   list-style: none;
   border-bottom: none;
 }
+.calendar-people li + li {
+  margin-inline-start: -0.5ex;
+}
 
 .day__name {
   display: inline-block;
-  width: 8ch;
   font-family: monospace;
   font-variant: small-caps;
   text-transform: capitalize;
