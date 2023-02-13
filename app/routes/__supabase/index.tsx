@@ -1,23 +1,30 @@
-import type { LoaderArgs, LoaderFunction } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
-import { FiLogOut } from "react-icons/fi";
 import { createServerClient } from "utils/supabase.server";
-import { useSupabase } from "../__supabase";
 
 export const loader = async ({ request }: LoaderArgs) => {
   const response = new Response();
   const supabase = createServerClient({ request, response });
 
-  const { data } = await supabase.from("cities").select("slug, label");
+  const [
+    { data: cities },
+    {
+      data: { user },
+    },
+  ] = await Promise.all([
+    supabase.from("cities").select("slug, label"),
+    supabase.auth.getUser(),
+  ]);
 
   return json({
-    cities: data ?? [],
+    cities: cities ?? [],
+    loggedIn: user != null,
   });
 };
 
 export default function Index() {
-  const { cities } = useLoaderData<typeof loader>();
+  const { cities, loggedIn } = useLoaderData<typeof loader>();
 
   return (
     <>
@@ -27,6 +34,7 @@ export default function Index() {
             <h1>Welcome to FourSFEIR</h1>
             <h2>Si vous avez la référence, félicitations vous êtes vieux</h2>
           </hgroup>
+          {!loggedIn && <p>Connectez-vous pour voir les présences</p>}
           <ul>
             {cities.map((city) => (
               <li key={city.slug}>
