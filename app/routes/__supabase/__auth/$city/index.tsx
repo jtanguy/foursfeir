@@ -7,6 +7,8 @@ import { createServerClient } from "utils/supabase.server";
 
 import { CalendarDay } from "~/components/CalendarDay";
 
+const SATURDAY = 6;
+
 export const loader = async ({ request, params }: LoaderArgs) => {
   const response = new Response();
   const supabase = createServerClient({ request, response });
@@ -35,11 +37,15 @@ export default function Current() {
   const { bookings, capacity, user } = useLoaderData<typeof loader>();
 
   const today = Temporal.Now.plainDateISO();
-  const startOfWeek = today.subtract({ days: today.dayOfWeek - 1 });
+  let startOfWeek = today.subtract({ days: today.dayOfWeek - 1 });
 
-  const days = Array.from({ length: 14 }, (_, i) => i)
+  if (today.dayOfWeek >= SATURDAY) {
+    startOfWeek = startOfWeek.add({ weeks: 1 });
+  }
+
+  const days = Array.from({ length: today.daysInWeek * 2 }, (_, i) => i)
     .map((n) => startOfWeek.add({ days: n }))
-    .filter((d) => d.dayOfWeek < 6);
+    .filter((d) => d.dayOfWeek < SATURDAY);
 
   return (
     <>
