@@ -72,13 +72,6 @@ main.container {
   margin-block-start: 3em;
 }
 
-.calendar-edit {
-  position: sticky;
-  bottom: 1rem;
-  margin-inline: auto;
-  max-width: 50ch;
-}
-
 .calendar-day__gauge {
   --border-radius: 0;
   margin-bottom: 0;
@@ -103,6 +96,15 @@ main.container {
   justify-content: space-between;
 }
 
+.calendar-day__actions {
+  --border-width: 0;
+  --form-element-background-color: none;
+}
+
+.calendar-day__actions ul {
+  width: fit-content;
+}
+
 .calendar-people {
   --line-height: var(--avatar-size);
   flex: 1 0 auto;
@@ -112,7 +114,7 @@ main.container {
   font-size: var(--avatar-size);
 }
 
-.calendar-people__book-self {
+.inline-button {
   display: inline;
   width: auto;
   margin: 0;
@@ -121,6 +123,9 @@ main.container {
   --color: var(--color); /* To override a change in the inherited button color*/
   color: var(--color);
   padding: 0;
+}
+
+.calendar-people__book-self {
   font-size: 1em;
   line-height: 1em;
 }

@@ -1,6 +1,7 @@
 import { useFetcher } from "@remix-run/react";
 import { Temporal } from "@js-temporal/polyfill";
 import cx from "classnames";
+
 import { BsPlusCircleDotted } from "react-icons/bs";
 
 import type { Database } from "db_types";
@@ -33,6 +34,12 @@ export function CalendarDay({
 
   const isSubmitting = fetcher.state !== "idle";
 
+  const pluralRules = new Intl.PluralRules("fr-FR");
+  const formattedPeople: string = {
+    one: `${people.length} inscrit`,
+    other: `${people.length} inscrits`,
+  }[pluralRules.select(people.length)];
+
   return (
     <article
       className={cx(
@@ -61,44 +68,40 @@ export function CalendarDay({
               value={hasBooking ? "remove" : "book"}
             />
             <ul className="calendar-people">
-              {people.map((person) => {
-                const isSelf = person.profiles.id === userId;
-                return (
-                  <li
-                    key={person.profiles?.id}
-                    data-tooltip={
-                      isSelf ? "Se désinscrire" : person.profiles?.full_name
-                    }
-                    data-placement={isSelf ? "bottom" : "top"}
-                  >
-                    {isSelf ? (
-                      <button className="calendar-people__book-self">
-                        <img
-                          className="avatar"
-                          referrerPolicy="no-referrer"
-                          alt={person.profiles?.full_name}
-                          src={person.profiles?.avatar_url}
-                        />
-                      </button>
-                    ) : (
-                      <img
-                        className="avatar"
-                        referrerPolicy="no-referrer"
-                        alt={person.profiles?.full_name}
-                        src={person.profiles?.avatar_url}
-                      />
-                    )}
-                  </li>
-                );
-              })}
+              {people.map((person) => (
+                <li
+                  key={person.profiles?.id}
+                  data-tooltip={person.profiles?.full_name}
+                >
+                  <img
+                    className="avatar"
+                    referrerPolicy="no-referrer"
+                    alt={person.profiles?.full_name}
+                    src={person.profiles?.avatar_url}
+                  />
+                </li>
+              ))}
               {!hasBooking && (
                 <li>
-                  <button className="calendar-people__book-self">
+                  <button className="inline-button calendar-people__book-self">
                     <BsPlusCircleDotted />
                   </button>
                 </li>
               )}
             </ul>
+            <details role="list" dir="rtl" className="calendar-day__actions">
+              <summary aria-haspopup="listbox" aria-label="Actions">
+                &nbsp;
+              </summary>
+              <ul role="listbox" dir="ltr">
+                <li>{formattedPeople}</li>
+                <li>
+                  <button className="inline-button calendar-day__action">
+                    {hasBooking ? "Se désinscrire" : "S'inscrire"}
+                  </button>
+                </li>
+              </ul>
+            </details>
           </fetcher.Form>
         ) : (
           <ul className="calendar-people">
