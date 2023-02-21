@@ -105,19 +105,8 @@ main.container {
   width: fit-content;
 }
 
-.calendar-people {
-  --line-height: var(--avatar-size);
-  flex: 1 0 auto;
-  padding: 1ex;
-  min-height: calc(1.5 * var(--avatar-size));
-  margin: 0;
-  font-size: var(--avatar-size);
-}
 
 .inline-button {
-  display: inline;
-  width: auto;
-  margin: 0;
   border: none;
   background: none;
   --color: var(--color); /* To override a change in the inherited button color*/
@@ -125,22 +114,59 @@ main.container {
   padding: 0;
 }
 
+.calendar-people {
+  width: 100%;
+}
+
+@keyframes details-show {
+  from {
+    opacity:0;
+    transform: var(--details-translate, translateY(-1em));
+  }
+}
+
+details.calendar-people[open] > *:not(summary) {
+  animation: details-show 150ms ease-out;
+}
+
+.calendar-people__header {
+  --avatar-size: 2em;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.calendar-people__list {
+  --line-height: var(--avatar-size);
+  flex: 1 0 auto;
+  padding: 1ex;
+  min-height: calc(1.5 * var(--avatar-size));
+  margin: 0;
+}
+
 .calendar-people__book-self {
+  display: inline;
+  width: auto;
+  margin: 0;
+  padding: 1ex;
   font-size: 1em;
   line-height: 1em;
 }
 
-.calendar-people__book-self svg {
-  margin-top: -1px; /* MAGIC NUMBER to align with avatars*/
-  font-size: var(--avatar-size);
+.calendar-people__list li {
+  list-style: none;
 }
 
-.calendar-people li {
+.calendar-people__list .avatar + span {
+  margin-inline-start: 1ex;
+}
+
+.calendar-people__list--inline li {
   display: inline;
-  list-style: none;
   border-bottom: none;
 }
-.calendar-people li + li {
+
+.calendar-people__list--inline li + li {
   margin-inline-start: -0.5ex;
 }
 

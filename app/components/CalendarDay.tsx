@@ -25,7 +25,11 @@ export function CalendarDay({
   capacity,
   className,
 }: Props) {
-  const hasBooking = people.some((p) => p.profiles.id === userId);
+  const [self, others] = [
+    people.find((p) => p.profiles.id === userId),
+    people.filter((p) => p.profiles.id !== userId),
+  ];
+  const hasBooking = self != null;
   const today = Temporal.Now.plainDateISO();
   const isToday = Temporal.PlainDate.compare(date, today) === 0;
   const isFuture = Temporal.PlainDate.compare(date, today) >= 0;
@@ -33,6 +37,8 @@ export function CalendarDay({
   const fetcher = useFetcher();
 
   const isSubmitting = fetcher.state !== "idle";
+
+  // const [open, setOpen] =
 
   const pluralRules = new Intl.PluralRules("fr-FR");
   const formattedPeople: string = {
@@ -67,44 +73,72 @@ export function CalendarDay({
               name="action"
               value={hasBooking ? "remove" : "book"}
             />
-            <ul className="calendar-people">
-              {people.map((person) => (
-                <li
-                  key={person.profiles?.id}
-                  data-tooltip={person.profiles?.full_name}
-                >
-                  <img
-                    className="avatar"
-                    referrerPolicy="no-referrer"
-                    alt={person.profiles?.full_name}
-                    src={person.profiles?.avatar_url}
-                  />
-                </li>
-              ))}
-              {!hasBooking && (
-                <li>
-                  <button className="inline-button calendar-people__book-self">
-                    <BsPlusCircleDotted />
-                  </button>
-                </li>
-              )}
-            </ul>
-            <details role="list" dir="rtl" className="calendar-day__actions">
-              <summary aria-haspopup="listbox" aria-label="Actions">
-                &nbsp;
+            <details className="calendar-people">
+              <summary className="calendar-people__header">
+                <ul className="calendar-people__list calendar-people__list--inline">
+                  {people.map((person) => (
+                    <li
+                      key={person.profiles?.id}
+                      data-tooltip={person.profiles?.full_name}
+                    >
+                      <img
+                        className="avatar"
+                        referrerPolicy="no-referrer"
+                        alt={person.profiles?.full_name}
+                        src={person.profiles?.avatar_url}
+                      />
+                    </li>
+                  ))}
+                  {!hasBooking && (
+                    <li>
+                      <button className="inline-button calendar-people__book-self">
+                        <BsPlusCircleDotted className="avatar"/>
+                      </button>
+                    </li>
+                  )}
+                </ul>
               </summary>
-              <ul role="listbox" dir="ltr">
-                <li>{formattedPeople}</li>
+              <ul className="calendar-people__list calendar-people--expanded">
+                {others.map((person) => (
+                  <li key={person.profiles?.id}>
+                    <img
+                      className="avatar"
+                      referrerPolicy="no-referrer"
+                      alt=""
+                      src={person.profiles?.avatar_url}
+                    />
+                    <span>
+                      {person.profiles?.full_name}
+                    </span>
+                  </li>
+                ))}
                 <li>
-                  <button className="inline-button calendar-day__action">
-                    {hasBooking ? "Se désinscrire" : "S'inscrire"}
-                  </button>
+                  {hasBooking ? (
+                    <>
+                      <img
+                        className="avatar"
+                        referrerPolicy="no-referrer"
+                        alt={self.profiles?.full_name}
+                        src={self.profiles?.avatar_url}
+                      />{" "}
+                      <button className="calendar-people__book-self">
+                        Se désinscrire
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <BsPlusCircleDotted className="avatar" />{" "}
+                      <button className="calendar-people__book-self">
+                        S'inscrire
+                      </button>
+                    </>
+                  )}
                 </li>
               </ul>
             </details>
           </fetcher.Form>
         ) : (
-          <ul className="calendar-people">
+          <ul className="calendar-people__list calendar-people__header calendar-people__list--inline">
             {people.map((person) => (
               <li key={person.profiles?.id}>
                 <img
