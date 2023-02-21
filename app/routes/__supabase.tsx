@@ -16,7 +16,7 @@ import { createServerClient } from "utils/supabase.server";
 import config from "config";
 
 import type { Database } from "db_types";
-import { FiLogOut } from "react-icons/fi";
+import { FiGithub, FiLogOut } from "react-icons/fi";
 
 export const loader = async ({ request }: LoaderArgs) => {
   const response = new Response();
@@ -35,7 +35,7 @@ export const loader = async ({ request }: LoaderArgs) => {
   return json({ env, session }, { headers: response.headers });
 };
 
-const SupabaseContext = createContext({ supabase: undefined, session: null });
+// const SupabaseContext = createContext({ supabase: undefined, session: null });
 
 export type AuthContext = {
   supabase: SupabaseClient<Database>;
@@ -120,7 +120,7 @@ export default function WithSupabase() {
       </nav>
       <Outlet context={{ supabase, session }} />
       <footer className="container">
-        FourSFEIR. CSS by <a href="https://picocss.com/">PicoCSS</a>. Icons by{" "}
+        FourSFEIR (<a href="https://github.com/jtanguy/foursfeir"><FiGithub /> Source</a>). CSS by <a href="https://picocss.com/">PicoCSS</a>. Icons by{" "}
         <a href="https://react-icons.github.io/react-icons/icons?name=fi">
           Feather by React-icons
         </a>{" "}
