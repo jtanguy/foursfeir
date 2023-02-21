@@ -105,7 +105,6 @@ main.container {
   width: fit-content;
 }
 
-
 .inline-button {
   border: none;
   background: none;
@@ -116,11 +115,13 @@ main.container {
 
 .calendar-people {
   width: 100%;
+  border-bottom: 0;
+  margin-bottom: 0;
 }
 
 @keyframes details-show {
   from {
-    opacity:0;
+    opacity: 0;
     transform: var(--details-translate, translateY(-1em));
   }
 }
@@ -137,7 +138,7 @@ details.calendar-people[open] > *:not(summary) {
 }
 
 .avatar--partial {
-border: 2px dashed white;
+  border: 2px dashed white;
 }
 
 .calendar-people__list {
