@@ -29,6 +29,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 const schema = zfd.formData({
   date: zfd.text(),
+  period: zfd.text(z.enum(["day", "morning", "afternoon"])).optional(),
   action: zfd.text(z.enum(["book", "remove"])),
 });
 
@@ -36,7 +37,7 @@ export const action = async ({ request, params }: ActionArgs) => {
   const response = new Response();
   const supabase = createServerClient({ request, response });
 
-  const { action, date } = await schema.parse(await request.formData());
+  const { action, date, period } = schema.parse(await request.formData());
 
   const {
     data: { user },
@@ -47,7 +48,7 @@ export const action = async ({ request, params }: ActionArgs) => {
   if (action === "book") {
     await supabase
       .from("bookings")
-      .insert([{ city: params.city, date: date, user_id: user.id }]);
+      .insert([{ city: params.city, date: date, user_id: user.id, period: period }]);
   } else {
     await supabase.from("bookings").delete().match({
       user_id: user.id,

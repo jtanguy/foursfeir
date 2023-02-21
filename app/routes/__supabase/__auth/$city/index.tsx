@@ -16,7 +16,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   const [{ data: bookings }, { data: cities }] = await Promise.all([
     supabase
       .from("bookings")
-      .select("date, profiles (id, full_name, avatar_url)")
+      .select("date, period, profiles (id, full_name, avatar_url)")
       .eq("city", params.city),
     supabase.from("cities").select("capacity").eq("slug", params.city),
   ]);

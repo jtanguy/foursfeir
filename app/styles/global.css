@@ -136,6 +136,10 @@ details.calendar-people[open] > *:not(summary) {
   align-items: center;
 }
 
+.avatar--partial {
+border: 2px dashed white;
+}
+
 .calendar-people__list {
   --line-height: var(--avatar-size);
   flex: 1 0 auto;

@@ -10,6 +10,7 @@ type Props = {
   date: Temporal.PlainDate;
   people: {
     date: string;
+    period: string;
     profiles: Database["public"]["Tables"]["profiles"]["Row"][];
   }[];
   userId: string;
@@ -25,9 +26,13 @@ export function CalendarDay({
   capacity,
   className,
 }: Props) {
+  const sortedBookings = people.sort((a, b) =>
+    b.period.localeCompare(a.period)
+  );
+
   const [self, others] = [
-    people.find((p) => p.profiles.id === userId),
-    people.filter((p) => p.profiles.id !== userId),
+    sortedBookings.find((p) => p.profiles.id === userId),
+    sortedBookings.filter((p) => p.profiles.id !== userId),
   ];
   const hasBooking = self != null;
   const today = Temporal.Now.plainDateISO();
@@ -38,13 +43,11 @@ export function CalendarDay({
 
   const isSubmitting = fetcher.state !== "idle";
 
-  // const [open, setOpen] =
-
-  const pluralRules = new Intl.PluralRules("fr-FR");
-  const formattedPeople: string = {
-    one: `${people.length} inscrit`,
-    other: `${people.length} inscrits`,
-  }[pluralRules.select(people.length)];
+  const periods = {
+    day: "Journée",
+    morning: "Matin",
+    afternoon: "Après-midi",
+  };
 
   return (
     <article
@@ -76,39 +79,49 @@ export function CalendarDay({
             <details className="calendar-people">
               <summary className="calendar-people__header">
                 <ul className="calendar-people__list calendar-people__list--inline">
-                  {people.map((person) => (
+                  {sortedBookings.map((booking) => (
                     <li
-                      key={person.profiles?.id}
-                      data-tooltip={person.profiles?.full_name}
+                      key={booking.profiles?.id}
+                      data-tooltip={`${booking.profiles?.full_name} - ${
+                        periods[booking.period]
+                      }`}
                     >
                       <img
-                        className="avatar"
+                        className={cx("avatar", {
+                          "avatar--partial": booking.period !== "day",
+                        })}
                         referrerPolicy="no-referrer"
-                        alt={person.profiles?.full_name}
-                        src={person.profiles?.avatar_url}
+                        alt={booking.profiles?.full_name}
+                        src={booking.profiles?.avatar_url}
                       />
                     </li>
                   ))}
                   {!hasBooking && (
                     <li>
-                      <button className="inline-button calendar-people__book-self">
-                        <BsPlusCircleDotted className="avatar"/>
+                      <button
+                        type="submit"
+                        name="period"
+                        value="day"
+                        className="inline-button calendar-people__book-self"
+                      >
+                        <BsPlusCircleDotted className="avatar" />
                       </button>
                     </li>
                   )}
                 </ul>
               </summary>
               <ul className="calendar-people__list calendar-people--expanded">
-                {others.map((person) => (
-                  <li key={person.profiles?.id}>
+                {others.map((booking) => (
+                  <li key={booking.profiles?.id}>
                     <img
                       className="avatar"
                       referrerPolicy="no-referrer"
                       alt=""
-                      src={person.profiles?.avatar_url}
+                      src={booking.profiles?.avatar_url}
                     />
                     <span>
-                      {person.profiles?.full_name}
+                      {booking.profiles?.full_name} - ({periods[booking.period]}
+                      )
                     </span>
                   </li>
                 ))}
@@ -122,15 +135,52 @@ export function CalendarDay({
                         src={self.profiles?.avatar_url}
                       />{" "}
                       <button className="calendar-people__book-self">
-                        Se désinscrire
+                        Se désinscrire ({periods[self.period]})
                       </button>
                     </>
                   ) : (
                     <>
                       <BsPlusCircleDotted className="avatar" />{" "}
-                      <button className="calendar-people__book-self">
-                        S'inscrire
-                      </button>
+                      <details
+                        role="list"
+                        className="calendar-people__book-self"
+                      >
+                        <summary aria-haspopup="listbox" role="button">
+                          S'inscrire
+                        </summary>
+                        <ul role="listbox">
+                          <li>
+                            <button
+                              type="submit"
+                              name="period"
+                              value="day"
+                              className="inline-button calendar-people__book-self"
+                            >
+                              Journée
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              type="submit"
+                              name="period"
+                              value="morning"
+                              className="inline-button calendar-people__book-self"
+                            >
+                              Matin
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              type="submit"
+                              name="period"
+                              value="afternoon"
+                              className="inline-button calendar-people__book-self"
+                            >
+                              Après-midi
+                            </button>
+                          </li>
+                        </ul>
+                      </details>
                     </>
                   )}
                 </li>
