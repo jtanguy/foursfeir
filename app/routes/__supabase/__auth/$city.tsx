@@ -58,7 +58,7 @@ export const action = async ({ request, params }: ActionArgs) => {
         // Other email absent
         const {data: created} = await supabase.from('profiles').insert([
           {email: for_user}
-        ])
+        ]).select()
         otherId = created[0].id
       } else {
         otherId = other[0].id
