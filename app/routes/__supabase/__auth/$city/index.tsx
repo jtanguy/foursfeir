@@ -13,17 +13,17 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   const response = new Response();
   const supabase = createServerClient({ request, response });
 
-  const [{ data: bookings }, { data: cities }] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select("date, period, profiles (id, full_name, avatar_url)")
-      .eq("city", params.city),
-    supabase.from("cities").select("capacity").eq("slug", params.city),
-  ]);
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const [{ data: bookings }, { data: cities }] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select("date, period, profiles:user_id(id, full_name, avatar_url)")
+      .eq("city", params.city),
+    supabase.from("cities").select("capacity").eq("slug", params.city),
+  ]);
 
   return json({
     bookings: bookings ?? [],

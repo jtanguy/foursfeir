@@ -1,10 +1,11 @@
-import { useFetcher } from "@remix-run/react";
+import { Link, useFetcher } from "@remix-run/react";
 import { Temporal } from "@js-temporal/polyfill";
 import cx from "classnames";
 
 import { BsPlusCircleDotted } from "react-icons/bs";
 
 import type { Database } from "db_types";
+import Avatar from "./Avatar";
 
 type Props = {
   date: Temporal.PlainDate;
@@ -43,6 +44,9 @@ export function CalendarDay({
 
   const isSubmitting = fetcher.state !== "idle";
 
+  const selfFormId = `${date.toString()}-self`;
+  const otherFormId = `${date.toString()}-other`;
+
   const periods = {
     day: "Journée",
     morning: "Matin",
@@ -69,13 +73,15 @@ export function CalendarDay({
       </span>{" "}
       <>
         {isFuture ? (
-          <fetcher.Form method="post" action={`/${city}`}>
-            <input type="hidden" name="date" value={date.toString()} />
-            <input
-              type="hidden"
-              name="action"
-              value={hasBooking ? "remove" : "book"}
-            />
+          <div>
+            <fetcher.Form method="post" action={`/${city}`} id={selfFormId}>
+              <input type="hidden" name="date" value={date.toString()} />
+              <input
+                type="hidden"
+                name="action"
+                value={hasBooking ? "remove" : "book"}
+              />
+            </fetcher.Form>
             <details className="calendar-people">
               <summary className="calendar-people__header">
                 <ul className="calendar-people__list calendar-people__list--inline">
@@ -86,13 +92,11 @@ export function CalendarDay({
                         periods[booking.period]
                       }`}
                     >
-                      <img
-                        className={cx("avatar", {
+                      <Avatar
+                        className={cx({
                           "avatar--partial": booking.period !== "day",
                         })}
-                        referrerPolicy="no-referrer"
-                        alt={booking.profiles?.full_name}
-                        src={booking.profiles?.avatar_url}
+                        profile={booking.profiles}
                       />
                     </li>
                   ))}
@@ -100,6 +104,7 @@ export function CalendarDay({
                     <li>
                       <button
                         type="submit"
+                        form={selfFormId}
                         name="period"
                         value="day"
                         className="inline-button calendar-people__book-self"
@@ -113,11 +118,11 @@ export function CalendarDay({
               <ul className="calendar-people__list calendar-people--expanded">
                 {others.map((booking) => (
                   <li key={booking.profiles?.id}>
-                    <img
-                      className="avatar"
-                      referrerPolicy="no-referrer"
-                      alt=""
-                      src={booking.profiles?.avatar_url}
+                    <Avatar
+                      className={cx({
+                        "avatar--partial": booking.period !== "day",
+                      })}
+                      profile={booking.profiles}
                     />
                     <span>
                       {booking.profiles?.full_name} - ({periods[booking.period]}
@@ -128,13 +133,17 @@ export function CalendarDay({
                 <li>
                   {hasBooking ? (
                     <>
-                      <img
-                        className="avatar"
-                        referrerPolicy="no-referrer"
-                        alt={self.profiles?.full_name}
-                        src={self.profiles?.avatar_url}
+                      <Avatar
+                        className={cx({
+                          "avatar--partial": self.period !== "day",
+                        })}
+                        profile={self.profiles}
                       />{" "}
-                      <button className="calendar-people__book-self">
+                      <button
+                        type="submit"
+                        form={selfFormId}
+                        className="calendar-people__book-self"
+                      >
                         Se désinscrire ({periods[self.period]})
                       </button>
                     </>
@@ -152,6 +161,7 @@ export function CalendarDay({
                           <li>
                             <button
                               type="submit"
+                              form={selfFormId}
                               name="period"
                               value="day"
                               className="inline-button calendar-people__book-self"
@@ -162,6 +172,7 @@ export function CalendarDay({
                           <li>
                             <button
                               type="submit"
+                              form={selfFormId}
                               name="period"
                               value="morning"
                               className="inline-button calendar-people__book-self"
@@ -172,6 +183,7 @@ export function CalendarDay({
                           <li>
                             <button
                               type="submit"
+                              form={selfFormId}
                               name="period"
                               value="afternoon"
                               className="inline-button calendar-people__book-self"
@@ -184,20 +196,24 @@ export function CalendarDay({
                     </>
                   )}
                 </li>
+                <li>
+                  <Link to={`/${city}/${date.toString()}`}>
+                    Inscrire une autre personne
+                  </Link>
+                </li>
               </ul>
             </details>
-          </fetcher.Form>
+          </div>
         ) : (
           <ul className="calendar-people__list calendar-people__header calendar-people__list--inline">
-            {people.map((person) => (
-              <li key={person.profiles?.id}>
-                <img
-                  className="avatar"
-                  referrerPolicy="no-referrer"
-                  alt={person.profiles?.full_name}
-                  src={person.profiles?.avatar_url}
-                  data-tooltip={person.profiles?.full_name}
-                />
+            {people.map((booking) => (
+              <li
+                key={booking.profiles?.id}
+                data-tooltip={`${booking.profiles?.full_name} - ${
+                  periods[booking.period]
+                }`}
+              >
+                <Avatar profile={booking.profiles} />
               </li>
             ))}
           </ul>

@@ -31,13 +31,16 @@ const schema = zfd.formData({
   date: zfd.text(),
   period: zfd.text(z.enum(["day", "morning", "afternoon"])).optional(),
   action: zfd.text(z.enum(["book", "remove"])),
+  for_user: zfd.text().optional(),
 });
 
 export const action = async ({ request, params }: ActionArgs) => {
   const response = new Response();
   const supabase = createServerClient({ request, response });
 
-  const { action, date, period } = schema.parse(await request.formData());
+  const { action, date, period, for_user } = schema.parse(
+    await request.formData()
+  );
 
   const {
     data: { user },
@@ -46,9 +49,34 @@ export const action = async ({ request, params }: ActionArgs) => {
   if (!user) throw redirect("/login");
 
   if (action === "book") {
-    await supabase
-      .from("bookings")
-      .insert([{ city: params.city, date: date, user_id: user.id, period: period }]);
+    if (for_user) {
+      const {data: other}  =  await supabase.from('profiles').select('id').eq('email', for_user)
+
+      let otherId: string;
+
+      if(other == null || other.length === 0){
+        // Other email absent
+        const {data: created} = await supabase.from('profiles').insert([
+          {email: for_user}
+        ])
+        otherId = created[0].id
+      } else {
+        otherId = other[0].id
+      }
+
+      await supabase
+        .from("bookings")
+        .insert([
+          { city: params.city, date: date, user_id: otherId, period: period, booked_by: user.id },
+        ]);
+    } else {
+      // Self booking
+      await supabase
+        .from("bookings")
+        .insert([
+          { city: params.city, date: date, user_id: user.id, period: period },
+        ]);
+    }
   } else {
     await supabase.from("bookings").delete().match({
       user_id: user.id,

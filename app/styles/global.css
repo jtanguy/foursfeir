@@ -25,10 +25,16 @@ body {
 }
 
 .avatar {
+  display: inline-block;
   height: var(--avatar-size);
   width: var(--avatar-size);
   border-radius: 50%;
   vertical-align: text-top;
+}
+
+.avatar svg{
+  height: var(--avatar-size);
+  width: var(--avatar-size);
 }
 
 button.icon {
