@@ -26,7 +26,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
 
     const excludedIds: string[] = [user!.id, ...(bookings ?? []).map(b => b!.profiles!.id)]
 
-    const {data, profiles} = await supabase.from("profiles")
+    const {data: profiles} = await supabase.from("profiles")
     .select("id, email, full_name")
     .not('id', 'in', `(${excludedIds.join(',')})`)
 
