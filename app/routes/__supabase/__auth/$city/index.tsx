@@ -17,11 +17,21 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const today = Temporal.Now.plainDateISO();
+  let start = today.subtract({ days: today.dayOfWeek - 1 });
+
+  if (today.dayOfWeek >= SATURDAY) {
+    start = start.add({ weeks: 1 });
+  }
+  const end = start.add({days: today.daysInWeek * 2})
+
   const [{ data: bookings }, { data: cities }] = await Promise.all([
     supabase
       .from("bookings")
       .select("date, period, profiles:user_id(id, full_name, avatar_url)")
-      .eq("city", params.city),
+      .eq("city", params.city)
+      .gte("date", start.toString())
+      .lte("date", end.toString()),
     supabase.from("cities").select("capacity").eq("slug", params.city),
   ]);
 

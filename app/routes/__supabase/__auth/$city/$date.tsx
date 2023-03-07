@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Form, Link, useLoaderData, useParams } from "@remix-run/react";
+import { Form, useLoaderData, useParams } from "@remix-run/react";
 import { createServerClient } from "utils/supabase.server";
 
 
@@ -14,19 +14,21 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   } = await supabase.auth.getUser();
 
 
-  const [{ data: bookings }, { data: cities }, { data: profiles }] =
+  const [{ data: bookings }, { data: cities }] =
     await Promise.all([
       supabase
         .from("bookings")
-        .select("period, profiles (id, full_name, avatar_url)")
+        .select("period, profiles:user_id(id, email, full_name, avatar_url)")
         .eq("city", params.city)
         .eq("date", params.date),
-      supabase.from("cities").select("capacity").eq("slug", params.city),
-      supabase
-        .from("profiles")
-        .select("id, email, full_name, avatar_url")
-        .neq("id", user!.id),
+      supabase.from("cities").select("capacity").eq("slug", params.city)
     ]);
+
+    const excludedIds: string[] = [user!.id, ...(bookings ?? []).map(b => b!.profiles!.id)]
+
+    const {data, profiles} = await supabase.from("profiles")
+    .select("id, email, full_name")
+    .not('id', 'in', `(${excludedIds.join(',')})`)
 
   return json({
     bookings: bookings ?? [],
