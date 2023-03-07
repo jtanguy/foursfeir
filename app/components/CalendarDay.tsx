@@ -88,7 +88,7 @@ export function CalendarDay({
                   {sortedBookings.map((booking) => (
                     <li
                       key={booking.profiles?.id}
-                      data-tooltip={`${booking.profiles?.full_name} - ${
+                      data-tooltip={`${booking.profiles?.full_name ?? booking.profiles.email} - ${
                         periods[booking.period]
                       }`}
                     >
@@ -125,7 +125,7 @@ export function CalendarDay({
                       profile={booking.profiles}
                     />
                     <span>
-                      {booking.profiles?.full_name} - ({periods[booking.period]}
+                      {booking.profiles?.full_name ?? booking.profiles.email} - ({periods[booking.period]}
                       )
                     </span>
                   </li>

@@ -28,7 +28,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   const [{ data: bookings }, { data: cities }] = await Promise.all([
     supabase
       .from("bookings")
-      .select("date, period, profiles:user_id(id, full_name, avatar_url)")
+      .select("date, period, profiles:user_id(id, email, full_name, avatar_url)")
       .eq("city", params.city)
       .gte("date", start.toString())
       .lte("date", end.toString()),

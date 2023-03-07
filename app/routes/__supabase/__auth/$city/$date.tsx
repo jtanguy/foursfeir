@@ -3,6 +3,7 @@ import type { LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useLoaderData, useParams } from "@remix-run/react";
 import { createServerClient } from "utils/supabase.server";
+import Avatar from "~/components/Avatar";
 
 
 export const loader = async ({ request, params }: LoaderArgs) => {
@@ -66,14 +67,9 @@ export default function Current() {
       <ul className="calendar-people__list">
         {bookings.map((booking) => (
           <li key={booking.profiles?.id}>
-            <img
-              className="avatar"
-              referrerPolicy="no-referrer"
-              alt=""
-              src={booking.profiles?.avatar_url}
-            />
+            <Avatar profile={booking.profiles} size={96}/>
             <span>
-              {booking.profiles?.full_name}{" "}
+              {booking.profiles?.full_name ?? booking.profiles.email}{" "}
               {periods[booking.period] && <> ({periods[booking.period]})</>}
             </span>
           </li>
