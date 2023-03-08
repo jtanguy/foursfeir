@@ -88,9 +88,9 @@ export function CalendarDay({
                   {sortedBookings.map((booking) => (
                     <li
                       key={booking.profiles?.id}
-                      data-tooltip={`${booking.profiles?.full_name ?? booking.profiles.email} - ${
-                        periods[booking.period]
-                      }`}
+                      data-tooltip={`${
+                        booking.profiles?.full_name ?? booking.profiles.email
+                      } - ${periods[booking.period]}`}
                     >
                       <Avatar
                         className={cx({
@@ -125,8 +125,8 @@ export function CalendarDay({
                       profile={booking.profiles}
                     />
                     <span>
-                      {booking.profiles?.full_name ?? booking.profiles.email} - ({periods[booking.period]}
-                      )
+                      {booking.profiles?.full_name ?? booking.profiles.email} -
+                      ({periods[booking.period]})
                     </span>
                   </li>
                 ))}
@@ -206,14 +206,19 @@ export function CalendarDay({
           </div>
         ) : (
           <ul className="calendar-people__list calendar-people__header calendar-people__list--inline">
-            {people.map((booking) => (
+            {sortedBookings.map((booking) => (
               <li
                 key={booking.profiles?.id}
                 data-tooltip={`${booking.profiles?.full_name} - ${
                   periods[booking.period]
                 }`}
               >
-                <Avatar profile={booking.profiles} />
+                <Avatar
+                  className={cx({
+                    "avatar--partial": booking.period !== "day",
+                  })}
+                  profile={booking.profiles}
+                />
               </li>
             ))}
           </ul>
