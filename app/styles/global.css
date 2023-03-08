@@ -20,6 +20,11 @@ body {
   gap: 0.3em;
 }
 
+.header-user button {
+  --color: var(--color); /* To override a change in the inherited button color*/
+  color: var(--color);
+}
+
 .header-user__name {
   flex: 1 0 auto;
 }
