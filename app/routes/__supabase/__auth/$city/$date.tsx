@@ -1,3 +1,4 @@
+import {useState} from "react"
 import { Temporal } from "@js-temporal/polyfill";
 import type { LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
@@ -43,12 +44,29 @@ export default function Current() {
   const { city, date: dateStr } = useParams();
   const { bookings, capacity, profiles } = useLoaderData<typeof loader>();
 
+  const [showNameInput, setShowNameInput] = useState(false);
+
   const day = Temporal.PlainDate.from(dateStr);
 
   const periods = {
     morning: "Matin",
     afternoon: "Après-midi",
   };
+
+  const handleChange = (event) => {
+    const emailStr = event.target.value.trim();
+    const isEmailLike = emailStr.includes("@");
+    const profileExists = profiles.some(p => p.email.startsWith(emailStr)) || bookings.some(b => b.profiles.email.startsWith(emailStr));
+
+    if(!isEmailLike && showNameInput){
+      setShowNameInput(false)
+    }
+
+    if(isEmailLike && !showNameInput && !profileExists){
+      setShowNameInput(true)
+    }
+  }
+
 
   return (
     <>
@@ -80,7 +98,7 @@ export default function Current() {
         <input type="hidden" name="date" value={dateStr} />
         <label>
           Email
-          <input type="text" name="for_user" list="other" />
+          <input type="email" name="for_user" list="other" onChange={handleChange} />
         </label>
         <datalist id="other">
           {profiles.map((p) => {
@@ -91,6 +109,10 @@ export default function Current() {
             );
           })}
         </datalist>
+        {showNameInput && <label>
+          Nom
+          <input type="text" name="for_user_name" />
+        </label>}
         <fieldset>
           <legend>Période</legend>
           <label>
@@ -110,15 +132,6 @@ export default function Current() {
         <input type="hidden" name="action" value="book" />
         <input type="submit" value="Inscrire"/>
       </Form>
-      {/*     <CalendarDay */}
-      {/*       key={day.toString()} */}
-      {/*       className={cx({ "calendar-day--end-of-week": day.dayOfWeek === 5 })} */}
-      {/*       date={day} */}
-      {/*       people={bookings!} */}
-      {/*       userId={user!.id} */}
-      {/*       city={city!} */}
-      {/*       capacity={capacity} */}
-      {/*     /> */}
     </>
   );
 }

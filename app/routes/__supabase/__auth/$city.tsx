@@ -31,14 +31,16 @@ const schema = zfd.formData({
   date: zfd.text(),
   period: zfd.text(z.enum(["day", "morning", "afternoon"])).optional(),
   action: zfd.text(z.enum(["book", "remove"])),
-  for_user: zfd.text().optional(),
+  for_user: zfd.text(z.string().email()).optional(),
+  for_user_name: zfd.text().optional(),
 });
 
 export const action = async ({ request, params }: ActionArgs) => {
+  if (!params.city) throw new Response("No city given", { status: 400 });
   const response = new Response();
   const supabase = createServerClient({ request, response });
 
-  const { action, date, period, for_user } = schema.parse(
+  const { action, date, period, for_user, for_user_name } = schema.parse(
     await request.formData()
   );
 
@@ -50,24 +52,34 @@ export const action = async ({ request, params }: ActionArgs) => {
 
   if (action === "book") {
     if (for_user) {
-      const {data: other}  =  await supabase.from('profiles').select('id').eq('email', for_user)
+      const { data: other } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", for_user);
 
       let otherId: string;
 
-      if(other == null || other.length === 0){
+      if (other == null || other.length === 0) {
         // Other email absent
-        const {data: created} = await supabase.from('profiles').insert([
-          {email: for_user}
-        ]).select()
-        otherId = created[0].id
+        const { data: created } = await supabase
+          .from("profiles")
+          .insert([{ email: for_user, full_name: for_user_name }])
+          .select();
+        otherId = created[0].id;
       } else {
-        otherId = other[0].id
+        otherId = other[0].id;
       }
 
       await supabase
         .from("bookings")
         .insert([
-          { city: params.city, date: date, user_id: otherId, period: period, booked_by: user.id },
+          {
+            city: params.city,
+            date: date,
+            user_id: otherId,
+            period: period,
+            booked_by: user.id,
+          },
         ]);
     } else {
       // Self booking
