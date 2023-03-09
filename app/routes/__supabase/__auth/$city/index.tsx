@@ -61,13 +61,13 @@ export default function Current() {
     <>
       {days.map((day) => {
         const key = day.toString();
-        const people = bookings.filter(({ date }) => date === key);
+        const dayBookings = bookings.filter(({ date }) => date === key);
         return (
           <CalendarDay
             key={day.toString()}
             className={cx({ "calendar-day--end-of-week": day.dayOfWeek === 5 })}
             date={day}
-            people={people!}
+            bookings={dayBookings}
             userId={user!.id}
             city={city!}
             capacity={capacity}

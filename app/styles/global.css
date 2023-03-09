@@ -108,8 +108,12 @@ main.container {
 }
 
 .calendar-day__actions {
-  --border-width: 0;
-  --form-element-background-color: none;
+  margin-block-start: var(--typography-spacing-vertical);
+  /* margin-inline: var(--grid-spacing-horizontal); */
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
 }
 
 .calendar-day__actions ul {
@@ -152,6 +156,12 @@ details.calendar-people[open] > *:not(summary) {
   border: 2px dashed var(--color);
 }
 
+.calendar-people h3 {
+  font-size: 1em;
+  font-weight: normal;
+  margin: 0;
+}
+
 .calendar-people__list {
   --line-height: var(--avatar-size);
   flex: 1 0 auto;
@@ -165,6 +175,8 @@ details.calendar-people[open] > *:not(summary) {
   width: auto;
   margin: 0;
   padding: 1ex;
+  --form-element-spacing-vertical: 1ex;
+  --form-element-spacing-horizontal: 1em;
   font-size: 1em;
   line-height: 1em;
 }
@@ -191,6 +203,9 @@ details.calendar-people[open] > *:not(summary) {
   font-family: monospace;
   font-variant: small-caps;
   text-transform: capitalize;
+  font-size: 1rem;
+  font-weight: normal;
+  margin-bottom: 0;
 }
 
 .day__book {
