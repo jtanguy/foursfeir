@@ -1,24 +1,20 @@
 import { Link, useFetcher } from "@remix-run/react";
 import { Temporal } from "@js-temporal/polyfill";
 import cx from "classnames";
-
 import { BsPlusCircleDotted } from "react-icons/bs";
 
+import { periods, shortPeriods } from "~/constants";
 import type { Database } from "db_types";
 import Avatar from "./Avatar";
-
-const periods = {
-  day: "Journée",
-  morning: "Matin",
-  afternoon: "Après-midi",
-} as const;
+import { Fragment } from "react";
 
 type Props = {
   date: Temporal.PlainDate;
   bookings: {
     date: string;
     period: keyof typeof periods;
-    profiles: Database["public"]["Tables"]["profiles"]["Row"];
+    profile: Database["public"]["Tables"]["profiles"]["Row"];
+    guests: Record<keyof typeof periods, number>;
   }[];
   userId: string;
   city: string;
@@ -38,13 +34,13 @@ export function CalendarDay({
     b.period.localeCompare(a.period)
   );
 
-  const self = sortedBookings.find((p) => p.profiles.id === userId);
+  const self = sortedBookings.find((p) => p.profile.id === userId);
   const hasBooking = self != null;
 
   const byPeriod = sortedBookings.reduce(
     (acc, booking) => ({
       ...acc,
-      [booking.period]: [...acc[booking.period], booking.profiles],
+      [booking.period]: [...acc[booking.period], booking],
     }),
     { day: [], morning: [], afternoon: [] }
   );
@@ -59,6 +55,28 @@ export function CalendarDay({
 
   const selfFormId = `${date.toString()}-self`;
 
+  const bookingCounts = bookings.reduce(
+    (acc, booking) => {
+      return {
+        day:
+          acc.day +
+          (booking.period === "day" ? 1 : 0) +
+          (booking.guests?.day ?? 0),
+        morning:
+          acc.morning +
+          (booking.period === "morning" ? 1 : 0) +
+          (booking.guests?.morning ?? 0),
+        afternoon:
+          acc.afternoon +
+          (booking.period === "afternoon" ? 1 : 0) +
+          (booking.guests?.afternoon ?? 0),
+      };
+    },
+    { day: 0, morning: 0, afternoon: 0 }
+  );
+
+  const formatter = new Intl.ListFormat("fr-FR");
+
   return (
     <article
       className={cx(
@@ -70,17 +88,26 @@ export function CalendarDay({
         className
       )}
       aria-busy={isSubmitting}
+      data-placement="left"
+      data-tooltip={`${
+        bookingCounts.day +
+        Math.max(bookingCounts.morning, bookingCounts.afternoon)
+      } inscrits`}
     >
       <h2 className="day__name">
         {date.toLocaleString("fr-FR", {
           weekday: "short",
           day: "numeric",
         })}
-      </h2>{" "}
+      </h2>
+      {"   "}
+      {fetcher.type === "done" && fetcher.data.error && (
+        <span className="error">{fetcher.data.message}</span>
+      )}
       <>
         <div>
           {isFuture && (
-            <fetcher.Form method="post" action={`/${city}`} id={selfFormId}>
+            <fetcher.Form method="post" id={selfFormId}>
               <input type="hidden" name="date" value={date.toString()} />
               <input
                 type="hidden"
@@ -94,16 +121,16 @@ export function CalendarDay({
               <ul className="calendar-people__list calendar-people__list--inline">
                 {sortedBookings.map((booking) => (
                   <li
-                    key={booking.profiles?.id}
+                    key={booking.profile?.id}
                     data-tooltip={`${
-                      booking.profiles?.full_name ?? booking.profiles.email
+                      booking.profile?.full_name ?? booking.profile.email
                     } - ${periods[booking.period]}`}
                   >
                     <Avatar
                       className={cx({
                         "avatar--partial": booking.period !== "day",
                       })}
-                      profile={booking.profiles}
+                      profile={booking.profile}
                     />
                   </li>
                 ))}
@@ -123,28 +150,36 @@ export function CalendarDay({
               </ul>
             </summary>
             {Object.keys(periods).map((period) => {
-              const people = byPeriod[period];
-              if (people.length > 0) {
+              const bookings = byPeriod[period];
+              if (bookings.length > 0) {
                 return (
-                  <>
+                  <Fragment key={period}>
                     <h3>{periods[period]}</h3>
                     <ul
                       className="calendar-people__list calendar-people--expanded"
                       key={period}
                     >
-                      {people.map((profile) => (
-                        <li key={profile.id}>
-                          <Avatar
-                            className={cx({
-                              "avatar--partial": period !== "day",
-                            })}
-                            profile={profile}
-                          />
-                          <span>{profile?.full_name ?? profile.email}</span>
-                        </li>
-                      ))}
+                      {bookings.map(({ profile, guests }) => {
+                        const guestsString = formatter.format(
+                          Object.entries(guests)
+                            .filter((p) => p[1] > 0)
+                            .map((p) => `${p[1]} ${periods[p[0]]}`)
+                        );
+                        return (
+                          <li key={profile.id}>
+                            <Avatar
+                              className={cx({
+                                "avatar--partial": period !== "day",
+                              })}
+                              profile={profile}
+                            />
+                            <span>{profile?.full_name ?? profile.email}</span>
+                            {guestsString && ` (+${guestsString})`}
+                          </li>
+                        );
+                      })}
                     </ul>
-                  </>
+                  </Fragment>
                 );
               }
             })}
@@ -211,7 +246,10 @@ export function CalendarDay({
         </div>
       </>
       <progress
-        value={bookings.length}
+        value={
+          bookingCounts.day +
+          Math.max(bookingCounts.morning, bookingCounts.afternoon)
+        }
         max={capacity}
         className="calendar-day__gauge"
       />

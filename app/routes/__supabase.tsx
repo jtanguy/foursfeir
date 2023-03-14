@@ -96,9 +96,9 @@ export default function WithSupabase() {
           </ul>
         </div>
         <ul>
-          <li>
-            {user ? (
-              <div className="header-user">
+          {user ? (
+            <li role="list" dir="rtl" className="header-user">
+              <a href="#" aria-haspopup="listbox">
                 <img
                   className="avatar"
                   referrerPolicy="no-referrer"
@@ -108,19 +108,29 @@ export default function WithSupabase() {
                 <span className="header-user__name">
                   {user.user_metadata.full_name}
                 </span>
-                <button className="icon" type="button" onClick={logout}>
-                  <FiLogOut aria-label="Logout" />
-                </button>
-              </div>
-            ) : (
+              </a>
+              <ul role="listbox">
+                <li>
+                  <button className="icon" type="button" onClick={logout}>
+                    Déconnexion <FiLogOut aria-label="Logout" />
+                  </button>
+                </li>
+              </ul>
+            </li>
+          ) : (
+            <li>
               <Link to="/login">Login</Link>
-            )}
-          </li>
+            </li>
+          )}
         </ul>
       </nav>
       <Outlet context={{ supabase, session }} />
       <footer className="container">
-        FourSFEIR (<a href="https://github.com/jtanguy/foursfeir"><FiGithub /> Source</a>). CSS by <a href="https://picocss.com/">PicoCSS</a>. Icons by{" "}
+        FourSFEIR (
+        <a href="https://github.com/jtanguy/foursfeir">
+          <FiGithub /> Source
+        </a>
+        ). CSS by <a href="https://picocss.com/">PicoCSS</a>. Icons by{" "}
         <a href="https://react-icons.github.io/react-icons/icons?name=fi">
           Feather by React-icons
         </a>{" "}

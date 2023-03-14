@@ -1,0 +1,13 @@
+.calendar-people__list {
+  --avatar-size: 3em;
+}
+
+.avatar {
+  vertical-align: middle;
+}
+
+.guest-form, .colleague-form {
+  border: 1px solid;
+  padding-inline: 1em;
+}
+

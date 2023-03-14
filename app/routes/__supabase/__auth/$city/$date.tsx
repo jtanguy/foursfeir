@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Temporal } from "@js-temporal/polyfill";
-import type { LoaderArgs } from "@remix-run/node";
+import type { ActionArgs, LinksFunction, LoaderArgs } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
   Form,
@@ -8,8 +9,15 @@ import {
   useParams,
   useTransition,
 } from "@remix-run/react";
+import cx from "classnames";
+import { zfd } from "zod-form-data";
+import { z } from "zod";
+
+import { periods } from "~/constants";
 import { createServerClient } from "utils/supabase.server";
 import Avatar from "~/components/Avatar";
+
+import daily from "~/styles/daily.css";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const response = new Response();
@@ -22,7 +30,9 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   const [{ data: bookings }, { data: cities }] = await Promise.all([
     supabase
       .from("bookings")
-      .select("period, profiles:user_id(id, email, full_name, avatar_url)")
+      .select(
+        "period, profile:user_id(id, email, full_name, avatar_url), guests"
+      )
       .eq("city", params.city)
       .eq("date", params.date),
     supabase.from("cities").select("capacity").eq("slug", params.city),
@@ -30,7 +40,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
 
   const excludedIds: string[] = [
     user!.id,
-    ...(bookings ?? []).map((b) => b!.profiles!.id),
+    ...(bookings ?? []).map((b) => b.profile.id),
   ];
 
   const { data: profiles } = await supabase
@@ -46,21 +56,142 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   });
 };
 
+const schema = zfd.formData(
+  z.discriminatedUnion("action", [
+    z.object({
+      action: z.literal("book"),
+      period: zfd.text(z.enum(["day", "morning", "afternoon"])),
+      for_user: zfd.text(z.string().email()),
+      for_user_name: zfd.text().optional(),
+    }),
+    z.object({
+      action: z.literal("invite"),
+      period: zfd.text(z.enum(["day", "morning", "afternoon"])),
+      guests: z
+        .object({
+          day: zfd.numeric().optional(),
+          morning: zfd.numeric().optional(),
+          afternoon: zfd.numeric().optional(),
+        })
+        .optional(),
+    }),
+  ])
+);
+
+export const action = async ({ request, params }: ActionArgs) => {
+  if (!params.city) throw new Response("No city given", { status: 400 });
+  if (!params.date) throw new Response("No date given", { status: 400 });
+  const response = new Response();
+  const supabase = createServerClient({ request, response });
+
+  const f = schema.parse(await request.formData());
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw redirect("/login");
+
+  if (f.action === "book") {
+    const { data: other } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", f.for_user);
+
+    let otherId: string;
+
+    if (other == null || other.length === 0) {
+      // Other email absent
+      const { data: created } = await supabase
+        .from("profiles")
+        .insert([{ email: f.for_user, full_name: f.for_user_name }])
+        .select();
+      otherId = created[0].id;
+    } else {
+      otherId = other[0].id;
+    }
+
+    await supabase.from("bookings").insert([
+      {
+        city: params.city,
+        date: params.date,
+        user_id: otherId,
+        period: f.period,
+        booked_by: user.id,
+      },
+    ]);
+
+    return new Response(null, { status: 201 });
+  }
+
+  if (f.action === "invite") {
+    await supabase.from("bookings").upsert({
+      city: params.city,
+      date: params.date,
+      user_id: user.id,
+      period: f.period,
+      guests: f.guests,
+    });
+    return new Response(null, { status: 202 });
+  }
+};
+
+export const links: LinksFunction = () => [
+  {
+    rel: "stylesheet",
+    href: daily,
+  },
+];
+
 export default function Current() {
-  const { city, date: dateStr } = useParams();
-  const { bookings, capacity, profiles } = useLoaderData<typeof loader>();
+  const { date: dateStr } = useParams();
+  const { bookings, capacity, profiles, user } = useLoaderData<typeof loader>();
   const transition = useTransition();
 
   const [showNameInput, setShowNameInput] = useState(false);
 
   const day = Temporal.PlainDate.from(dateStr);
+  const today = Temporal.Now.plainDateISO();
+  const isFuture = Temporal.PlainDate.compare(day, today) >= 0;
 
-  const periods = {
-    morning: "Matin",
-    afternoon: "Après-midi",
+  const selfBooking = bookings.find((b) => b.profile.id === user.id);
+  const [selfPeriod, setSelfPeriod] = useState(selfBooking?.period ?? "day");
+
+  const byPeriod = bookings.reduce(
+    (acc, booking) => ({
+      ...acc,
+      [booking.period]: [...acc[booking.period], booking],
+    }),
+    { day: [], morning: [], afternoon: [] }
+  );
+
+  const bookingCounts = bookings.reduce(
+    (acc, booking) => {
+      return {
+        day:
+          acc.day +
+          (booking.period === "day" ? 1 : 0) +
+          (booking.guests?.day ?? 0),
+        morning:
+          acc.morning +
+          (booking.period === "morning" ? 1 : 0) +
+          (booking.guests?.morning ?? 0),
+        afternoon:
+          acc.afternoon +
+          (booking.period === "afternoon" ? 1 : 0) +
+          (booking.guests?.afternoon ?? 0),
+      };
+    },
+    { day: 0, morning: 0, afternoon: 0 }
+  );
+
+  const formatter = new Intl.ListFormat("fr-FR");
+
+  const handleSelfPeriodChange = (event) => {
+    setSelfPeriod(event.target.value);
   };
 
-  const handleChange = (event) => {
+  const handleColleagueEmailChange = (event) => {
     const emailStr = event.target.value.trim();
     const isEmailLike = emailStr.includes("@");
     const profileExists =
@@ -87,68 +218,190 @@ export default function Current() {
       </h2>
 
       <p>
-        {bookings.length}/{capacity} inscrits
+        {bookingCounts.day +
+          Math.max(bookingCounts.morning, bookingCounts.afternoon)}
+        /{capacity} inscrits
       </p>
 
-      <ul className="calendar-people__list">
-        {bookings.map((booking) => (
-          <li key={booking.profiles?.id}>
-            <Avatar profile={booking.profiles} size={96} />
-            <span>
-              {booking.profiles?.full_name ?? booking.profiles.email}{" "}
-              {periods[booking.period] && <> ({periods[booking.period]})</>}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      <Form method="post" action={`/${city}`}>
-        <input type="hidden" name="date" value={dateStr} />
-        <label>
-          Email
-          <input
-            type="email"
-            name="for_user"
-            list="other"
-            onChange={handleChange}
-          />
-        </label>
-        <datalist id="other">
-          {profiles.map((p) => {
+      <div className="calendar-people">
+        {Object.keys(periods).map((period) => {
+          const bookings = byPeriod[period];
+          if (bookings.length > 0) {
             return (
-              <option value={p.email!} key={p.id}>
-                {p.full_name ?? p.email}
-              </option>
+              <Fragment key={period}>
+                <h3>{periods[period]}</h3>
+                <ul className="calendar-people__list" key={period}>
+                  {bookings.map(({ profile, guests }) => {
+                    const guestsString = formatter.format(
+                      Object.entries(guests)
+                        .filter((p) => p[1] > 0)
+                        .map((p) => `${p[1]} ${periods[p[0]]}`)
+                    );
+                    return (
+                      <li key={profile.id}>
+                        <Avatar
+                          className={cx({
+                            "avatar--partial": period !== "day",
+                          })}
+                          profile={profile}
+                        />
+                        <span>{profile?.full_name ?? profile.email}</span>
+                        {guestsString && ` (+${guestsString})`}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Fragment>
             );
-          })}
-        </datalist>
-        {showNameInput && (
-          <label>
-            Nom
-            <input type="text" name="for_user_name" />
-          </label>
-        )}
-        <fieldset>
-          <legend>Période</legend>
-          <label>
-            <input type="radio" name="period" value="day" defaultChecked />
-            Journée
-          </label>
-          <label>
-            <input type="radio" name="period" value="morning" />
-            Matin
-          </label>
-          <label>
-            <input type="radio" name="period" value="afternoon" />
-            Après-midi
-          </label>
-        </fieldset>
+          }
+        })}
+      </div>
 
-        <input type="hidden" name="action" value="book" />
-        <button type="submit" aria-busy={transition.state === "submitting"}>
-          Inscrire
-        </button>
-      </Form>
+      {isFuture && (
+        <div className="grid">
+          <Form method="post">
+            <input type="hidden" name="action" value="invite" />
+            <fieldset className="guest-form">
+              <legend>Inscrire un invité/une invitée</legend>
+              <fieldset>
+                <legend>Ma période</legend>
+                <label>
+                  <input
+                    type="radio"
+                    name="period"
+                    value="day"
+                    checked={selfPeriod === "day"}
+                    onChange={handleSelfPeriodChange}
+                  />
+                  Journée
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="period"
+                    value="morning"
+                    checked={selfPeriod === "morning"}
+                    onChange={handleSelfPeriodChange}
+                  />
+                  Matin
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="period"
+                    value="afternoon"
+                    checked={selfPeriod === "afternoon"}
+                    onChange={handleSelfPeriodChange}
+                  />
+                  Après-midi
+                </label>
+              </fieldset>
+
+              <fieldset>
+                <legend>Invités/invitées</legend>
+                <label>
+                  Journée
+                  <input
+                    type="number"
+                    name="guests.day"
+                    min="0"
+                    max={capacity - bookings.length}
+                    defaultValue={selfBooking?.guests?.day ?? 0}
+                    disabled={selfPeriod !== "day"}
+                  />
+                </label>
+                <label>
+                  Matin
+                  <input
+                    type="number"
+                    name="guests.morning"
+                    min="0"
+                    max={capacity - bookings.length}
+                    defaultValue={selfBooking?.guests?.morning ?? 0}
+                    disabled={selfPeriod === "afternoon"}
+                  />
+                </label>
+                <label>
+                  Après-midi
+                  <input
+                    type="number"
+                    name="guests.afternoon"
+                    min="0"
+                    max={capacity - bookings.length}
+                    defaultValue={selfBooking?.guests?.afternoon ?? 0}
+                    disabled={selfPeriod === "morning"}
+                  />
+                </label>
+              </fieldset>
+
+              <button
+                type="submit"
+                aria-busy={transition.state === "submitting"}
+              >
+                Inscrire
+              </button>
+            </fieldset>
+          </Form>
+          <Form method="post">
+            <input type="hidden" name="action" value="book" />
+            <fieldset className="colleague-form">
+              <legend>Inscrire un Sfeirien/une Sfeirienne</legend>
+              <label>
+                Email
+                <input
+                  type="email"
+                  placeholder="example@sfeir.com"
+                  name="for_user"
+                  list="other"
+                  onChange={handleColleagueEmailChange}
+                />
+              </label>
+              <datalist id="other">
+                {profiles.map((p) => {
+                  return (
+                    <option value={p.email!} key={p.id}>
+                      {p.full_name ?? p.email}
+                    </option>
+                  );
+                })}
+              </datalist>
+              {showNameInput && (
+                <label>
+                  Nom
+                  <input type="text" name="for_user_name" />
+                </label>
+              )}
+              <fieldset>
+                <legend>Période</legend>
+                <label>
+                  <input
+                    type="radio"
+                    name="period"
+                    value="day"
+                    defaultChecked
+                  />
+                  Journée
+                </label>
+                <label>
+                  <input type="radio" name="period" value="morning" />
+                  Matin
+                </label>
+                <label>
+                  <input type="radio" name="period" value="afternoon" />
+                  Après-midi
+                </label>
+              </fieldset>
+
+              <button
+                type="submit"
+                aria-busy={transition.state === "submitting"}
+              >
+                Inscrire
+              </button>
+            </fieldset>
+          </Form>
+        </div>
+      )}
     </>
   );
 }

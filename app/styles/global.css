@@ -16,8 +16,6 @@ body {
 }
 .header-user {
   --avatar-size: 1.5em;
-  display: flex;
-  gap: 0.3em;
 }
 
 .header-user button {
@@ -63,6 +61,10 @@ button.icon {
 
 main.container {
   flex: 1 0 auto;
+}
+
+.error {
+  color: var(--form-element-invalid-border-color);
 }
 
 .calendar-day {
