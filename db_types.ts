@@ -40,6 +40,7 @@ export interface Database {
           city: string
           created_at: string | null
           date: string
+          guests: Json
           period: string
           user_id: string
         }
@@ -48,6 +49,7 @@ export interface Database {
           city: string
           created_at?: string | null
           date: string
+          guests?: Json
           period?: string
           user_id: string
         }
@@ -56,6 +58,7 @@ export interface Database {
           city?: string
           created_at?: string | null
           date?: string
+          guests?: Json
           period?: string
           user_id?: string
         }
@@ -211,6 +214,15 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      can_insert_object: {
+        Args: {
+          bucketid: string
+          name: string
+          owner: string
+          metadata: Json
+        }
+        Returns: undefined
+      }
       extension: {
         Args: {
           name: string
