@@ -3,7 +3,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import cx from "classnames";
 import { BsPlusCircleDotted } from "react-icons/bs";
 
-import { periods, shortPeriods } from "~/constants";
+import { periods } from "~/constants";
 import type { Database } from "db_types";
 import Avatar from "./Avatar";
 import { Fragment } from "react";
@@ -88,11 +88,6 @@ export function CalendarDay({
         className
       )}
       aria-busy={isSubmitting}
-      data-placement="left"
-      data-tooltip={`${
-        bookingCounts.day +
-        Math.max(bookingCounts.morning, bookingCounts.afternoon)
-      } inscrits`}
     >
       <h2 className="day__name">
         {date.toLocaleString("fr-FR", {
