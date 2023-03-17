@@ -7,6 +7,7 @@ import { periods } from "~/constants";
 import type { Database } from "db_types";
 import Avatar from "./Avatar";
 import { Fragment } from "react";
+import { getOccupancy, occupancy } from "~/bookingUtils";
 
 type Props = {
   date: Temporal.PlainDate;
@@ -19,6 +20,7 @@ type Props = {
   userId: string;
   city: string;
   capacity: number;
+  maxCapacity: number;
   className?: string;
 };
 
@@ -28,6 +30,7 @@ export function CalendarDay({
   userId,
   city,
   capacity,
+  maxCapacity,
   className,
 }: Props) {
   const sortedBookings = bookings.sort((a, b) =>
@@ -55,25 +58,9 @@ export function CalendarDay({
 
   const selfFormId = `${date.toString()}-self`;
 
-  const bookingCounts = bookings.reduce(
-    (acc, booking) => {
-      return {
-        day:
-          acc.day +
-          (booking.period === "day" ? 1 : 0) +
-          (booking.guests?.day ?? 0),
-        morning:
-          acc.morning +
-          (booking.period === "morning" ? 1 : 0) +
-          (booking.guests?.morning ?? 0),
-        afternoon:
-          acc.afternoon +
-          (booking.period === "afternoon" ? 1 : 0) +
-          (booking.guests?.afternoon ?? 0),
-      };
-    },
-    { day: 0, morning: 0, afternoon: 0 }
-  );
+  const occupancy = getOccupancy(bookings);
+
+  const isFull = occupancy === maxCapacity;
 
   const formatter = new Intl.ListFormat("fr-FR");
 
@@ -82,7 +69,7 @@ export function CalendarDay({
       className={cx(
         "calendar-day",
         {
-          "calendar-day--full": bookings.length === capacity,
+          "calendar-day--full": isFull,
           "calendar-day--today": isToday,
         },
         className
@@ -129,7 +116,7 @@ export function CalendarDay({
                     />
                   </li>
                 ))}
-                {!hasBooking && isFuture && (
+                {!hasBooking && isFuture && !isFull && (
                   <li>
                     <button
                       type="submit"
@@ -202,6 +189,7 @@ export function CalendarDay({
                             name="period"
                             value="day"
                             className="inline-button calendar-people__book-self"
+                            disabled={isFull}
                           >
                             Journée
                           </button>
@@ -213,6 +201,7 @@ export function CalendarDay({
                             name="period"
                             value="morning"
                             className="inline-button calendar-people__book-self"
+                            disabled={isFull}
                           >
                             Matin
                           </button>
@@ -224,6 +213,7 @@ export function CalendarDay({
                             name="period"
                             value="afternoon"
                             className="inline-button calendar-people__book-self"
+                            disabled={isFull}
                           >
                             Après-midi
                           </button>
@@ -241,10 +231,7 @@ export function CalendarDay({
         </div>
       </>
       <progress
-        value={
-          bookingCounts.day +
-          Math.max(bookingCounts.morning, bookingCounts.afternoon)
-        }
+        value={occupancy}
         max={capacity}
         className="calendar-day__gauge"
       />

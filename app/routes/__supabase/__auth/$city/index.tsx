@@ -36,12 +36,16 @@ export const loader = async ({ request, params }: LoaderArgs) => {
       .eq("city", params.city)
       .gte("date", start.toString())
       .lte("date", end.toString()),
-    supabase.from("cities").select("capacity").eq("slug", params.city),
+    supabase
+      .from("cities")
+      .select("capacity, max_capacity")
+      .eq("slug", params.city),
   ]);
 
   return json({
     bookings: bookings ?? [],
     capacity: cities[0].capacity,
+    maxCapacity: cities[0].max_capacity,
     user,
   });
 };
@@ -65,7 +69,7 @@ export const action = async ({ request, params }: ActionArgs) => {
   const response = new Response();
   const supabase = createServerClient({ request, response });
 
-  const { action, date, period } = schema.parse(await request.formData());
+  const f = schema.parse(await request.formData());
 
   const {
     data: { user },
@@ -73,18 +77,18 @@ export const action = async ({ request, params }: ActionArgs) => {
 
   if (!user) throw redirect("/login");
 
-  if (action === "book") {
+  if (f.action === "book") {
     await supabase
       .from("bookings")
       .insert([
-        { city: params.city, date: date, user_id: user.id, period: period },
+        { city: params.city, date: f.date, user_id: user.id, period: f.period },
       ]);
     return new Response(null, { status: 201 });
   } else {
     await supabase.from("bookings").delete().match({
       user_id: user.id,
       city: params.city,
-      date: date,
+      date: f.date,
     });
     return new Response(null, { status: 202 });
   }
@@ -92,7 +96,8 @@ export const action = async ({ request, params }: ActionArgs) => {
 
 export default function Current() {
   const { city } = useParams();
-  const { bookings, capacity, user } = useLoaderData<typeof loader>();
+  const { bookings, capacity, maxCapacity, user } =
+    useLoaderData<typeof loader>();
 
   const today = Temporal.Now.plainDateISO();
   let startOfWeek = today.subtract({ days: today.dayOfWeek - 1 });
@@ -119,6 +124,7 @@ export default function Current() {
             userId={user!.id}
             city={city!}
             capacity={capacity}
+            maxCapacity={maxCapacity}
           />
         );
       })}

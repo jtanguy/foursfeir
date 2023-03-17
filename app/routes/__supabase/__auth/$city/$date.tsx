@@ -18,6 +18,7 @@ import { createServerClient } from "utils/supabase.server";
 import Avatar from "~/components/Avatar";
 
 import daily from "~/styles/daily.css";
+import { getOccupancy } from "~/bookingUtils";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const response = new Response();
@@ -35,7 +36,10 @@ export const loader = async ({ request, params }: LoaderArgs) => {
       )
       .eq("city", params.city)
       .eq("date", params.date),
-    supabase.from("cities").select("capacity").eq("slug", params.city),
+    supabase
+      .from("cities")
+      .select("capacity, max_capacity")
+      .eq("slug", params.city),
   ]);
 
   const excludedIds: string[] = [
@@ -51,6 +55,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   return json({
     bookings: bookings ?? [],
     capacity: cities[0].capacity,
+    maxCapacity: cities[0].max_capacity,
     profiles: profiles ?? [],
     user,
   });
@@ -145,7 +150,8 @@ export const links: LinksFunction = () => [
 
 export default function Current() {
   const { date: dateStr } = useParams();
-  const { bookings, capacity, profiles, user } = useLoaderData<typeof loader>();
+  const { bookings, capacity, maxCapacity, profiles, user } =
+    useLoaderData<typeof loader>();
   const transition = useTransition();
 
   const [showNameInput, setShowNameInput] = useState(false);
@@ -165,25 +171,9 @@ export default function Current() {
     { day: [], morning: [], afternoon: [] }
   );
 
-  const bookingCounts = bookings.reduce(
-    (acc, booking) => {
-      return {
-        day:
-          acc.day +
-          (booking.period === "day" ? 1 : 0) +
-          (booking.guests?.day ?? 0),
-        morning:
-          acc.morning +
-          (booking.period === "morning" ? 1 : 0) +
-          (booking.guests?.morning ?? 0),
-        afternoon:
-          acc.afternoon +
-          (booking.period === "afternoon" ? 1 : 0) +
-          (booking.guests?.afternoon ?? 0),
-      };
-    },
-    { day: 0, morning: 0, afternoon: 0 }
-  );
+  const occupancy = getOccupancy(bookings);
+
+  const isFull = occupancy === maxCapacity;
 
   const formatter = new Intl.ListFormat("fr-FR");
 
@@ -218,9 +208,7 @@ export default function Current() {
       </h2>
 
       <p>
-        {bookingCounts.day +
-          Math.max(bookingCounts.morning, bookingCounts.afternoon)}
-        /{capacity} inscrits
+        {occupancy}/{capacity} inscrits
       </p>
 
       <div className="calendar-people">
@@ -336,6 +324,7 @@ export default function Current() {
 
               <button
                 type="submit"
+                disabled={isFull}
                 aria-busy={transition.state === "submitting"}
               >
                 Inscrire
@@ -394,6 +383,7 @@ export default function Current() {
 
               <button
                 type="submit"
+                disabled={isFull}
                 aria-busy={transition.state === "submitting"}
               >
                 Inscrire
