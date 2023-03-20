@@ -34,6 +34,20 @@ export interface Database {
   }
   public: {
     Tables: {
+      admins: {
+        Row: {
+          city_slug: string
+          user_id: string
+        }
+        Insert: {
+          city_slug: string
+          user_id: string
+        }
+        Update: {
+          city_slug?: string
+          user_id?: string
+        }
+      }
       bookings: {
         Row: {
           booked_by: string | null
@@ -68,19 +82,45 @@ export interface Database {
           capacity: number
           created_at: string | null
           label: string | null
+          max_capacity: number
           slug: string
         }
         Insert: {
           capacity: number
           created_at?: string | null
           label?: string | null
+          max_capacity: number
           slug: string
         }
         Update: {
           capacity?: number
           created_at?: string | null
           label?: string | null
+          max_capacity?: number
           slug?: string
+        }
+      }
+      notices: {
+        Row: {
+          city: string
+          created_at: string | null
+          date: string
+          message: string
+          temp_capacity: number | null
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          date: string
+          message: string
+          temp_capacity?: number | null
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          date?: string
+          message?: string
+          temp_capacity?: number | null
         }
       }
       profiles: {
@@ -108,7 +148,13 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: {
+          user_id: string
+          city: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
