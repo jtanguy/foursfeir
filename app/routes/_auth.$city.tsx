@@ -1,4 +1,4 @@
-import type { LoaderFunction } from "@remix-run/node";
+import type { LoaderFunction, RouteHandle } from "@remix-run/node";
 import { json, Response } from "@remix-run/node";
 import { Link, Outlet, useLoaderData } from "@remix-run/react";
 import { createServerClient } from "utils/supabase.server";
@@ -37,6 +37,6 @@ export default function City() {
   );
 }
 
-export const handle = {
+export const handle: RouteHandle = {
   breadcrumb: (match) => <Link to={match.pathname}>{match.params.city}</Link>,
 };

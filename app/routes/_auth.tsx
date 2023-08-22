@@ -1,5 +1,5 @@
-import { LoaderArgs, redirect } from "@remix-run/node";
-import { Response } from "@remix-run/node";
+import type { LoaderArgs } from "@remix-run/node";
+import { redirect, Response } from "@remix-run/node";
 import { Outlet } from "@remix-run/react";
 
 import { createServerClient } from "utils/supabase.server";
@@ -13,12 +13,14 @@ export const loader = async ({ request }: LoaderArgs) => {
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (!session) {
+  const path = new URL(request.url).pathname;
+
+  if (path != "/" && !session) {
     throw redirect("/login");
   }
   return null;
 };
 
-export default function WithAuth() {
+export default function Layout() {
   return <Outlet />;
 }
