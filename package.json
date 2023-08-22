@@ -8,30 +8,30 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@js-temporal/polyfill": "^0.4.3",
-    "@picocss/pico": "^1.5.7",
-    "@remix-run/node": "^1.4.3",
-    "@remix-run/react": "^1.12.0",
-    "@remix-run/vercel": "^1.12.0",
-    "@supabase/auth-helpers-remix": "^0.1.4",
-    "@vercel/node": "^2.9.0",
-    "boring-avatars": "^1.7.0",
+    "@js-temporal/polyfill": "^0.4.4",
+    "@picocss/pico": "^1.5.10",
+    "@remix-run/node": "^1.19.3",
+    "@remix-run/react": "^1.19.3",
+    "@remix-run/vercel": "^1.19.3",
+    "@supabase/auth-helpers-remix": "^0.2.1",
+    "@vercel/node": "^2.15.10",
+    "boring-avatars": "^1.10.1",
     "classnames": "^2.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-icons": "^4.7.1",
-    "supabase": "^1.37.1",
-    "zod": "^3.20.2",
-    "zod-form-data": "^1.2.4"
+    "react-icons": "^4.10.1",
+    "supabase": "^1.88.0",
+    "zod": "^3.22.2",
+    "zod-form-data": "^2.0.1"
   },
   "devDependencies": {
-    "@remix-run/dev": "^1.12.0",
-    "@remix-run/eslint-config": "^1.12.0",
-    "@remix-run/serve": "^1.12.0",
-    "@types/react": "^18.0.27",
-    "@types/react-dom": "^18.0.10",
-    "eslint": "^8.33.0",
-    "typescript": "^4.9.5"
+    "@remix-run/dev": "^1.19.3",
+    "@remix-run/eslint-config": "^1.19.3",
+    "@remix-run/serve": "^1.19.3",
+    "@types/react": "^18.2.21",
+    "@types/react-dom": "^18.2.7",
+    "eslint": "^8.47.0",
+    "typescript": "^5.1.6"
   },
   "engines": {
     "node": ">=14"
