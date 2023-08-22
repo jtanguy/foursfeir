@@ -1,13 +1,12 @@
 import { Fragment, useState } from "react";
 import { Temporal } from "@js-temporal/polyfill";
 import type { ActionArgs, LinksFunction, LoaderArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import {
   Form,
   useLoaderData,
+  useNavigation,
   useParams,
-  useTransition,
 } from "@remix-run/react";
 import cx from "classnames";
 import { zfd } from "zod-form-data";
@@ -95,7 +94,9 @@ export const action = async ({ request, params }: ActionArgs) => {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) throw redirect("/login");
+  if (!user) {
+    throw redirect("/");
+  }
 
   if (f.action === "book") {
     const { data: other } = await supabase
@@ -152,7 +153,7 @@ export default function Current() {
   const { date: dateStr } = useParams();
   const { bookings, capacity, maxCapacity, profiles, user } =
     useLoaderData<typeof loader>();
-  const transition = useTransition();
+  const navigation = useNavigation();
 
   const [showNameInput, setShowNameInput] = useState(false);
 
@@ -325,7 +326,7 @@ export default function Current() {
               <button
                 type="submit"
                 disabled={isFull}
-                aria-busy={transition.state === "submitting"}
+                aria-busy={navigation.state === "submitting"}
               >
                 Inscrire
               </button>
@@ -384,7 +385,7 @@ export default function Current() {
               <button
                 type="submit"
                 disabled={isFull}
-                aria-busy={transition.state === "submitting"}
+                aria-busy={navigation.state === "submitting"}
               >
                 Inscrire
               </button>

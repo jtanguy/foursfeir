@@ -7,7 +7,7 @@ import { periods } from "~/constants";
 import type { Database } from "db_types";
 import Avatar from "./Avatar";
 import { Fragment } from "react";
-import { getOccupancy, occupancy } from "~/bookingUtils";
+import { getOccupancy } from "~/bookingUtils";
 
 type Props = {
   date: Temporal.PlainDate;
@@ -83,8 +83,8 @@ export function CalendarDay({
         })}
       </h2>
       {"   "}
-      {fetcher.type === "done" && fetcher.data.error && (
-        <span className="error">{fetcher.data.message}</span>
+      {fetcher.state === "idle" && fetcher.data?.error && (
+        <span className="error">{fetcher.data?.message}</span>
       )}
       <>
         <div>

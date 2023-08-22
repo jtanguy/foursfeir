@@ -1,8 +1,11 @@
 import { useOutletContext } from "@remix-run/react";
-import type { AuthContext } from "../__supabase";
+import type { SupabaseClient } from "@supabase/auth-helpers-remix";
+import type { Database } from "db_types";
 
 export default function Login() {
-  const { supabase } = useOutletContext<AuthContext>();
+  const { supabase } = useOutletContext<{
+    supabase: SupabaseClient<Database>;
+  }>();
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
