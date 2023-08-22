@@ -1,4 +1,4 @@
-import type { LinksFunction, MetaFunction } from "@remix-run/node";
+import type { LinksFunction, V2_MetaFunction } from "@remix-run/node";
 import {
   Links,
   LiveReload,
@@ -12,11 +12,11 @@ import { toTemporalInstant } from "@js-temporal/polyfill";
 import picoStyles from "@picocss/pico/css/pico.min.css";
 import globalStyles from "~/styles/global.css";
 
-export const meta: MetaFunction = () => ({
-  charset: "utf-8",
-  title: "FourSFEIR",
-  viewport: "width=device-width,initial-scale=1",
-});
+export const meta: V2_MetaFunction = () => [
+  { title: "FourSFEIR" },
+  { charset: "utf-8" },
+  { property: "viewport", value: "width=device-width,initial-scale=1" },
+];
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: picoStyles },
