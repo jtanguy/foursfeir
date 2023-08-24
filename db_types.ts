@@ -3,7 +3,7 @@ export type Json =
   | number
   | boolean
   | null
-  | { [key: string]: Json }
+  | { [key: string]: Json | undefined }
   | Json[]
 
 export interface Database {
@@ -47,6 +47,20 @@ export interface Database {
           city_slug?: string
           user_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "admins_city_slug_fkey"
+            columns: ["city_slug"]
+            referencedRelation: "cities"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "admins_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       bookings: {
         Row: {
@@ -76,6 +90,26 @@ export interface Database {
           period?: string
           user_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_booked_by_fkey"
+            columns: ["booked_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_city_fkey"
+            columns: ["city"]
+            referencedRelation: "cities"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "bookings_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       cities: {
         Row: {
@@ -99,6 +133,7 @@ export interface Database {
           max_capacity?: number
           slug?: string
         }
+        Relationships: []
       }
       notices: {
         Row: {
@@ -122,6 +157,14 @@ export interface Database {
           message?: string
           temp_capacity?: number | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "notices_city_fkey"
+            columns: ["city"]
+            referencedRelation: "cities"
+            referencedColumns: ["slug"]
+          }
+        ]
       }
       profiles: {
         Row: {
@@ -142,6 +185,7 @@ export interface Database {
           full_name?: string | null
           id?: string
         }
+        Relationships: []
       }
     }
     Views: {
@@ -199,6 +243,14 @@ export interface Database {
           public?: boolean | null
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "buckets_owner_fkey"
+            columns: ["owner"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       migrations: {
         Row: {
@@ -219,6 +271,7 @@ export interface Database {
           id?: number
           name?: string
         }
+        Relationships: []
       }
       objects: {
         Row: {
@@ -254,6 +307,20 @@ export interface Database {
           path_tokens?: string[] | null
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "objects_bucketId_fkey"
+            columns: ["bucket_id"]
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "objects_owner_fkey"
+            columns: ["owner"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
@@ -285,7 +352,7 @@ export interface Database {
         Args: {
           name: string
         }
-        Returns: string[]
+        Returns: unknown
       }
       get_size_by_bucket: {
         Args: Record<PropertyKey, never>
