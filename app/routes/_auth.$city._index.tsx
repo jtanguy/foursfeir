@@ -27,38 +27,46 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   }
   const end = start.add({ days: today.daysInWeek * 2 });
 
-  const [{ data: bookings }, { data: cities }] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select(
-        "date, period, profile:user_id(id, email, full_name, avatar_url), guests"
-      )
-      .eq("city", params.city)
-      .gte("date", start.toString())
-      .lte("date", end.toString()),
-    supabase
-      .from("cities")
-      .select("capacity, max_capacity")
-      .eq("slug", params.city),
-  ]);
+  const [{ data: bookings }, { data: notices }, { data: cities }] =
+    await Promise.all([
+      supabase
+        .from("bookings")
+        .select(
+          "date, period, profile:user_id(id, email, full_name, avatar_url), guests"
+        )
+        .eq("city", params.city)
+        .gte("date", start.toString())
+        .lte("date", end.toString()),
+      supabase
+        .from("notices")
+        .select("date, message, temp_capacity")
+        .eq("city", params.city)
+        .gte("date", start.toString())
+        .lte("date", end.toString()),
+      supabase
+        .from("cities")
+        .select("capacity, max_capacity")
+        .eq("slug", params.city),
+    ]);
 
   return json({
     bookings: bookings ?? [],
     capacity: cities[0].capacity,
     maxCapacity: cities[0].max_capacity,
+    notices: notices ?? [],
     user,
   });
 };
 
 const schema = zfd.formData(
-  z.discriminatedUnion("action", [
+  z.discriminatedUnion("_action", [
     z.object({
-      action: z.literal("book"),
+      _action: z.literal("book"),
       date: zfd.text(),
       period: zfd.text(z.enum(["day", "morning", "afternoon"])),
     }),
     z.object({
-      action: z.literal("remove"),
+      _action: z.literal("remove"),
       date: zfd.text(),
     }),
   ])
@@ -77,7 +85,7 @@ export const action = async ({ request, params }: ActionArgs) => {
 
   if (!user) throw redirect("/login");
 
-  if (f.action === "book") {
+  if (f._action === "book") {
     await supabase
       .from("bookings")
       .insert([
@@ -96,7 +104,7 @@ export const action = async ({ request, params }: ActionArgs) => {
 
 export default function Current() {
   const { city } = useParams();
-  const { bookings, capacity, maxCapacity, user } =
+  const { bookings, notices, capacity, maxCapacity, user } =
     useLoaderData<typeof loader>();
 
   const today = Temporal.Now.plainDateISO();
@@ -115,16 +123,18 @@ export default function Current() {
       {days.map((day) => {
         const key = day.toString();
         const dayBookings = bookings.filter(({ date }) => date === key);
+        const notice = notices.find((n) => n.date === key);
         return (
           <CalendarDay
             key={day.toString()}
             className={cx({ "calendar-day--end-of-week": day.dayOfWeek === 5 })}
             date={day}
+            notice={notice?.message}
             bookings={dayBookings}
             userId={user!.id}
             city={city!}
-            capacity={capacity}
-            maxCapacity={maxCapacity}
+            capacity={notice?.temp_capacity ?? capacity}
+            maxCapacity={notice?.temp_capacity ?? maxCapacity}
           />
         );
       })}

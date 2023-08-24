@@ -27,19 +27,25 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: bookings }, { data: cities }] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select(
-        "period, profile:user_id(id, email, full_name, avatar_url), guests"
-      )
-      .eq("city", params.city)
-      .eq("date", params.date),
-    supabase
-      .from("cities")
-      .select("capacity, max_capacity")
-      .eq("slug", params.city),
-  ]);
+  const [{ data: bookings }, { data: cities }, { data: notices }] =
+    await Promise.all([
+      supabase
+        .from("bookings")
+        .select(
+          "period, profile:user_id(id, email, full_name, avatar_url), guests"
+        )
+        .eq("city", params.city)
+        .eq("date", params.date),
+      supabase
+        .from("cities")
+        .select("capacity, max_capacity")
+        .eq("slug", params.city),
+      supabase
+        .from("notices")
+        .select("message, temp_capacity")
+        .eq("city", params.city)
+        .eq("date", params.date),
+    ]);
 
   const excludedIds: string[] = [
     user!.id,
@@ -54,22 +60,23 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   return json({
     bookings: bookings ?? [],
     capacity: cities[0].capacity,
-    maxCapacity: cities[0].max_capacity,
+    notice: notices[0]?.message,
+    maxCapacity: notices[0]?.temp_capacity ?? cities[0].max_capacity,
     profiles: profiles ?? [],
     user,
   });
 };
 
 const schema = zfd.formData(
-  z.discriminatedUnion("action", [
+  z.discriminatedUnion("_action", [
     z.object({
-      action: z.literal("book"),
+      _action: z.literal("book"),
       period: zfd.text(z.enum(["day", "morning", "afternoon"])),
       for_user: zfd.text(z.string().email()),
       for_user_name: zfd.text().optional(),
     }),
     z.object({
-      action: z.literal("invite"),
+      _action: z.literal("invite"),
       period: zfd.text(z.enum(["day", "morning", "afternoon"])),
       guests: z
         .object({
@@ -151,7 +158,7 @@ export const links: LinksFunction = () => [
 
 export default function Current() {
   const { date: dateStr } = useParams();
-  const { bookings, capacity, maxCapacity, profiles, user } =
+  const { bookings, capacity, notice, maxCapacity, profiles, user } =
     useLoaderData<typeof loader>();
   const navigation = useNavigation();
 
@@ -174,7 +181,7 @@ export default function Current() {
 
   const occupancy = getOccupancy(bookings);
 
-  const isFull = occupancy === maxCapacity;
+  const isFull = occupancy >= maxCapacity;
 
   const formatter = new Intl.ListFormat("fr-FR");
 
@@ -208,8 +215,14 @@ export default function Current() {
         })}
       </h2>
 
+      {notice && (
+        <h3>
+          Note: {notice}. Capacité réduite à {maxCapacity}
+        </h3>
+      )}
+
       <p>
-        {occupancy}/{capacity} inscrits
+        {occupancy}/{Math.min(capacity, maxCapacity)} inscrits
       </p>
 
       <div className="calendar-people">
@@ -249,7 +262,7 @@ export default function Current() {
       {isFuture && (
         <div className="grid">
           <Form method="post">
-            <input type="hidden" name="action" value="invite" />
+            <input type="hidden" name="_action" value="invite" />
             <fieldset className="guest-form">
               <legend>Inscrire un invité/une invitée</legend>
               <fieldset>
@@ -333,7 +346,7 @@ export default function Current() {
             </fieldset>
           </Form>
           <Form method="post">
-            <input type="hidden" name="action" value="book" />
+            <input type="hidden" name="_action" value="book" />
             <fieldset className="colleague-form">
               <legend>Inscrire un Sfeirien/une Sfeirienne</legend>
               <label>

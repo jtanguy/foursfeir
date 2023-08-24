@@ -19,6 +19,7 @@ type Props = {
   }[];
   userId: string;
   city: string;
+  notice?: string;
   capacity: number;
   maxCapacity: number;
   className?: string;
@@ -29,6 +30,7 @@ export function CalendarDay({
   bookings,
   userId,
   city,
+  notice,
   capacity,
   maxCapacity,
   className,
@@ -81,6 +83,7 @@ export function CalendarDay({
           weekday: "short",
           day: "numeric",
         })}
+        {notice && <> &mdash; {notice}</>}
       </h2>
       {"   "}
       {fetcher.state === "idle" && fetcher.data?.error && (
@@ -93,7 +96,7 @@ export function CalendarDay({
               <input type="hidden" name="date" value={date.toString()} />
               <input
                 type="hidden"
-                name="action"
+                name="_action"
                 value={hasBooking ? "remove" : "book"}
               />
             </fetcher.Form>
@@ -123,7 +126,7 @@ export function CalendarDay({
                       form={selfFormId}
                       name="period"
                       value="day"
-                      className="inline-button calendar-people__book-self"
+                      className="inline-button no-button calendar-people__book-self"
                     >
                       <BsPlusCircleDotted className="avatar" />
                     </button>
@@ -188,7 +191,7 @@ export function CalendarDay({
                             form={selfFormId}
                             name="period"
                             value="day"
-                            className="inline-button calendar-people__book-self"
+                            className="inline-button no-button calendar-people__book-self"
                             disabled={isFull}
                           >
                             Journée
@@ -200,7 +203,7 @@ export function CalendarDay({
                             form={selfFormId}
                             name="period"
                             value="morning"
-                            className="inline-button calendar-people__book-self"
+                            className="inline-button no-button calendar-people__book-self"
                             disabled={isFull}
                           >
                             Matin
@@ -212,7 +215,7 @@ export function CalendarDay({
                             form={selfFormId}
                             name="period"
                             value="afternoon"
-                            className="inline-button calendar-people__book-self"
+                            className="inline-button no-button calendar-people__book-self"
                             disabled={isFull}
                           >
                             Après-midi

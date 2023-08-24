@@ -23,6 +23,10 @@ body {
   color: var(--color);
 }
 
+.header-user ul[role="listbox"] li a::after {
+  content: unset;
+}
+
 .header-user__name {
   flex: 1 0 auto;
 }
@@ -100,7 +104,7 @@ main.container {
   background: var(--form-element-invalid-border-color);
 }
 
-.calendar-day form {
+.calendar-day form, form.inline-form {
   margin: 0;
   width: 100%;
   height: 100%;
@@ -122,12 +126,16 @@ main.container {
   width: fit-content;
 }
 
-.inline-button {
+.no-button {
   border: none;
   background: none;
   --color: var(--color); /* To override a change in the inherited button color*/
   color: var(--color);
+}
+
+.inline-button {
   padding: 0;
+  margin: 0;
 }
 
 .calendar-people {

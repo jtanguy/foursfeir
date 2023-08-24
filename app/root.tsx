@@ -18,14 +18,15 @@ import {
 } from "@remix-run/react";
 import { toTemporalInstant } from "@js-temporal/polyfill";
 
-import picoStyles from "@picocss/pico/css/pico.min.css";
-import globalStyles from "~/styles/global.css";
 import { createServerClient } from "utils/supabase.server";
 import config from "config";
 import { createBrowserClient } from "@supabase/auth-helpers-remix";
 import { useEffect, useState } from "react";
 import type { Database } from "db_types";
 import { FiLogOut, FiGithub } from "react-icons/fi";
+
+import picoStyles from "@picocss/pico/css/pico.min.css";
+import globalStyles from "~/styles/global.css";
 
 export const loader = async ({ request }: LoaderArgs) => {
   const response = new Response();
@@ -41,7 +42,16 @@ export const loader = async ({ request }: LoaderArgs) => {
     SUPABASE_ANON_KEY: config.SUPABASE_ANON_KEY,
   };
 
-  return json({ env, session }, { headers: response.headers });
+  if (session) {
+    const { data: cities } = await supabase
+      .from("admins")
+      .select("city_slug, cities(label)")
+      .eq("user_id", session.user.id);
+
+    return json({ env, session, cities }, { headers: response.headers });
+  }
+
+  return json({ env, session, cities: [] }, { headers: response.headers });
 };
 
 export const meta: V2_MetaFunction = () => [
@@ -62,7 +72,7 @@ Object.defineProperty(Date.prototype, "toTemporalInstant", {
 });
 
 export default function App() {
-  const { env, session } = useLoaderData<typeof loader>();
+  const { env, session, cities } = useLoaderData<typeof loader>();
   const { revalidate } = useRevalidator();
   const matches = useMatches();
   const [supabase] = useState(() =>
@@ -134,6 +144,13 @@ export default function App() {
                     </span>
                   </a>
                   <ul role="listbox">
+                    {cities?.map(({ city_slug, cities }) => (
+                      <li key={city_slug}>
+                        <Link to={`/${city_slug}/admin`}>
+                          {cities.label} admin
+                        </Link>
+                      </li>
+                    ))}
                     <li>
                       <button className="icon" type="button" onClick={logout}>
                         Déconnexion <FiLogOut aria-label="Logout" />
