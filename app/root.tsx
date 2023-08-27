@@ -54,11 +54,7 @@ export const loader = async ({ request }: LoaderArgs) => {
   return json({ env, session, cities: [] }, { headers: response.headers });
 };
 
-export const meta: V2_MetaFunction = () => [
-  { title: "FourSFEIR" },
-  { charset: "utf-8" },
-  { property: "viewport", value: "width=device-width,initial-scale=1" },
-];
+export const meta: V2_MetaFunction = () => [{ title: "FourSFEIR" }];
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: picoStyles },
@@ -108,6 +104,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
