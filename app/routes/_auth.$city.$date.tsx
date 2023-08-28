@@ -189,7 +189,6 @@ export default function Current() {
   const { bookings, capacity, notice, maxCapacity, profiles, user, isAdmin } =
     useLoaderData<typeof loader>();
   const navigation = useNavigation();
-  const fetcher = useFetcher();
 
   const [showNameInput, setShowNameInput] = useState(false);
 
@@ -210,7 +209,6 @@ export default function Current() {
 
   const occupancy = getOccupancy(bookings);
 
-  const isDeleteSubmitting = fetcher.state !== "idle";
   const isFull = occupancy >= maxCapacity;
 
   const formatter = new Intl.ListFormat("fr-FR");
@@ -264,6 +262,8 @@ export default function Current() {
                 <h3>{periods[period]}</h3>
                 <ul className="calendar-people__list" key={period}>
                   {bookings.map(({ profile, guests }) => {
+                    const fetcher = useFetcher();
+                    const isDeleteSubmitting = fetcher.state !== "idle";
                     const guestsString = formatter.format(
                       Object.entries(guests)
                         .filter((p) => p[1] > 0)
