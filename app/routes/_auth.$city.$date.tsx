@@ -105,7 +105,7 @@ export const action = async ({ request, params }: ActionArgs) => {
     throw redirect("/");
   }
 
-  if (f.action === "book") {
+  if (f._action === "book") {
     const { data: other } = await supabase
       .from("profiles")
       .select("id")
@@ -137,7 +137,7 @@ export const action = async ({ request, params }: ActionArgs) => {
     return new Response(null, { status: 201 });
   }
 
-  if (f.action === "invite") {
+  if (f._action === "invite") {
     await supabase.from("bookings").upsert({
       city: params.city,
       date: params.date,
