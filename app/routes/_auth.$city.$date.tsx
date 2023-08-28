@@ -4,6 +4,7 @@ import type { ActionArgs, LinksFunction, LoaderArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import {
   Form,
+  useFetcher,
   useLoaderData,
   useNavigation,
   useParams,
@@ -18,6 +19,7 @@ import Avatar from "~/components/Avatar";
 
 import daily from "~/styles/daily.css";
 import { getOccupancy } from "~/bookingUtils";
+import { FiUserMinus } from "react-icons/fi";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const response = new Response();
@@ -27,25 +29,33 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: bookings }, { data: cities }, { data: notices }] =
-    await Promise.all([
-      supabase
-        .from("bookings")
-        .select(
-          "period, profile:user_id(id, email, full_name, avatar_url), guests"
-        )
-        .eq("city", params.city)
-        .eq("date", params.date),
-      supabase
-        .from("cities")
-        .select("capacity, max_capacity")
-        .eq("slug", params.city),
-      supabase
-        .from("notices")
-        .select("message, temp_capacity")
-        .eq("city", params.city)
-        .eq("date", params.date),
-    ]);
+  const [
+    { data: bookings },
+    { data: cities },
+    { data: notices },
+    { data: isAdmin },
+  ] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select(
+        "period, profile:user_id(id, email, full_name, avatar_url), guests"
+      )
+      .eq("city", params.city)
+      .eq("date", params.date),
+    supabase
+      .from("cities")
+      .select("capacity, max_capacity")
+      .eq("slug", params.city),
+    supabase
+      .from("notices")
+      .select("message, temp_capacity")
+      .eq("city", params.city)
+      .eq("date", params.date),
+    supabase.rpc("is_admin", {
+      user_id: user!.id,
+      city: params.city!,
+    }),
+  ]);
 
   const excludedIds: string[] = [
     user!.id,
@@ -64,6 +74,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     maxCapacity: notices[0]?.temp_capacity ?? cities[0].max_capacity,
     profiles: profiles ?? [],
     user,
+    isAdmin,
   });
 };
 
@@ -85,6 +96,10 @@ const schema = zfd.formData(
           afternoon: zfd.numeric().optional(),
         })
         .optional(),
+    }),
+    z.object({
+      _action: z.literal("remove"),
+      user_id: zfd.text(),
     }),
   ])
 );
@@ -147,6 +162,19 @@ export const action = async ({ request, params }: ActionArgs) => {
     });
     return new Response(null, { status: 202 });
   }
+
+  const { data: isAdmin } = await supabase.rpc("is_admin", {
+    user_id: user!.id,
+    city: params.city!,
+  });
+  if (isAdmin && f._action === "remove") {
+    await supabase.from("bookings").delete().match({
+      user_id: f.user_id,
+      city: params.city,
+      date: params.date,
+    });
+    return new Response(null, { status: 202 });
+  }
 };
 
 export const links: LinksFunction = () => [
@@ -158,9 +186,10 @@ export const links: LinksFunction = () => [
 
 export default function Current() {
   const { date: dateStr } = useParams();
-  const { bookings, capacity, notice, maxCapacity, profiles, user } =
+  const { bookings, capacity, notice, maxCapacity, profiles, user, isAdmin } =
     useLoaderData<typeof loader>();
   const navigation = useNavigation();
+  const fetcher = useFetcher();
 
   const [showNameInput, setShowNameInput] = useState(false);
 
@@ -181,6 +210,7 @@ export default function Current() {
 
   const occupancy = getOccupancy(bookings);
 
+  const isDeleteSubmitting = fetcher.state !== "idle";
   const isFull = occupancy >= maxCapacity;
 
   const formatter = new Intl.ListFormat("fr-FR");
@@ -240,7 +270,7 @@ export default function Current() {
                         .map((p) => `${p[1]} ${periods[p[0]]}`)
                     );
                     return (
-                      <li key={profile.id}>
+                      <li key={profile.id} aria-busy={isDeleteSubmitting}>
                         <Avatar
                           className={cx({
                             "avatar--partial": period !== "day",
@@ -249,6 +279,29 @@ export default function Current() {
                         />
                         <span>{profile?.full_name ?? profile.email}</span>
                         {guestsString && ` (+${guestsString})`}
+                        {isAdmin && (
+                          <span>
+                            <fetcher.Form method="post" className="inline-form">
+                              <input
+                                type="hidden"
+                                name="user_id"
+                                value={profile.id}
+                              />
+
+                              <button
+                                className="inline-button icon"
+                                role="button"
+                                name="_action"
+                                value="remove"
+                              >
+                                <FiUserMinus
+                                  title="Désinscrire"
+                                  aria-label="Désinscrire"
+                                />
+                              </button>
+                            </fetcher.Form>
+                          </span>
+                        )}
                       </li>
                     );
                   })}
