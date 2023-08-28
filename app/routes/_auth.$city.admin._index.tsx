@@ -115,7 +115,7 @@ export default function CityAdmin() {
                 {notice.temp_capacity}/{city.max_capacity}
               </td>
               <td>
-                <Form method="post" className="inline-form">
+                <Form method="post" className="admin-form">
                   <input type="hidden" name="date" value={notice.date} />
                   <button
                     className="inline-button icon"

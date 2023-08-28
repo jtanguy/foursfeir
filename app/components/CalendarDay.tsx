@@ -128,7 +128,7 @@ export function CalendarDay({
                       value="day"
                       className="inline-button no-button calendar-people__book-self"
                     >
-                      <BsPlusCircleDotted className="avatar" />
+                      <BsPlusCircleDotted className="avatar icon" />
                     </button>
                   </li>
                 )}
@@ -225,9 +225,7 @@ export function CalendarDay({
                     </details>
                   )}
                 </div>
-                <Link to={`/${city}/${date.toString()}`}>
-                  Inscrire une autre personne
-                </Link>
+                <Link to={`/${city}/${date.toString()}`}>Détails</Link>
               </div>
             )}
           </details>
