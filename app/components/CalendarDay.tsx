@@ -35,6 +35,7 @@ export function CalendarDay({
   maxCapacity,
   className,
 }: Props) {
+  const fetcher = useFetcher();
   const sortedBookings = bookings.sort((a, b) =>
     b.period.localeCompare(a.period)
   );
@@ -53,8 +54,6 @@ export function CalendarDay({
   const today = Temporal.Now.plainDateISO();
   const isToday = Temporal.PlainDate.compare(date, today) === 0;
   const isFuture = Temporal.PlainDate.compare(date, today) >= 0;
-
-  const fetcher = useFetcher();
 
   const isSubmitting = fetcher.state !== "idle";
 

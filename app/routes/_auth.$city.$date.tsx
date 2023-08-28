@@ -189,6 +189,7 @@ export default function Current() {
   const { bookings, capacity, notice, maxCapacity, profiles, user, isAdmin } =
     useLoaderData<typeof loader>();
   const navigation = useNavigation();
+  const deleteFetcher = useFetcher();
 
   const [showNameInput, setShowNameInput] = useState(false);
 
@@ -222,7 +223,7 @@ export default function Current() {
     const isEmailLike = emailStr.includes("@");
     const profileExists =
       profiles.some((p) => p.email.startsWith(emailStr)) ||
-      bookings.some((b) => b.profiles.email.startsWith(emailStr));
+      bookings.some((b) => b.profile.email.startsWith(emailStr));
 
     if (!isEmailLike && showNameInput) {
       setShowNameInput(false);
@@ -262,8 +263,9 @@ export default function Current() {
                 <h3>{periods[period]}</h3>
                 <ul className="calendar-people__list" key={period}>
                   {bookings.map(({ profile, guests }) => {
-                    const fetcher = useFetcher();
-                    const isDeleteSubmitting = fetcher.state !== "idle";
+                    const isDeleteSubmitting =
+                      deleteFetcher.state !== "idle" &&
+                      deleteFetcher.formData?.get("user_id") == profile.id;
                     const guestsString = formatter.format(
                       Object.entries(guests)
                         .filter((p) => p[1] > 0)
@@ -281,7 +283,10 @@ export default function Current() {
                         {guestsString && ` (+${guestsString})`}
                         {isAdmin && (
                           <span>
-                            <fetcher.Form method="post" className="inline-form">
+                            <deleteFetcher.Form
+                              method="post"
+                              className="inline-form"
+                            >
                               <input
                                 type="hidden"
                                 name="user_id"
@@ -299,7 +304,7 @@ export default function Current() {
                                   aria-label="Désinscrire"
                                 />
                               </button>
-                            </fetcher.Form>
+                            </deleteFetcher.Form>
                           </span>
                         )}
                       </li>
