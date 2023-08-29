@@ -29,6 +29,7 @@ body {
 
 .header-user__name {
   flex: 1 0 auto;
+  margin-inline-start: 0.5em;
 }
 
 .avatar {
