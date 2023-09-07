@@ -61,7 +61,8 @@ export function CalendarDay({
 
   const occupancy = getOccupancy(bookings);
 
-  const isFull = occupancy === maxCapacity;
+  const isVisuallyFull = occupancy >= capacity;
+  const isFull = occupancy >= maxCapacity;
 
   const formatter = new Intl.ListFormat("fr-FR");
 
@@ -70,7 +71,7 @@ export function CalendarDay({
       className={cx(
         "calendar-day",
         {
-          "calendar-day--full": isFull,
+          "calendar-day--full": isVisuallyFull,
           "calendar-day--today": isToday,
         },
         className

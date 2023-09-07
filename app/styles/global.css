@@ -187,7 +187,7 @@ details.calendar-people[open] > *:not(summary) {
 
 .calendar-people__list {
   --line-height: var(--avatar-size);
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   padding: 1ex;
   min-height: calc(1.5 * var(--avatar-size));
   margin: 0;
