@@ -251,7 +251,7 @@ export default function Current() {
       )}
 
       <p>
-        {occupancy}/{Math.min(capacity, maxCapacity)} inscrits
+        {occupancy}/{Math.min(capacity, maxCapacity)} inscrits. {occupancy > capacity && <>Attention: débordement dans les autres salles à prévoir</>}
       </p>
 
       <div className="calendar-people">
