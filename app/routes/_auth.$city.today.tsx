@@ -3,7 +3,7 @@ import { redirect } from "@remix-run/node";
 import { Outlet } from "@remix-run/react";
 import type { LoaderArgs } from "@remix-run/node";
 
-export const loader = async ({request}: LoaderArgs) => {
+export const loader = async ({params}: LoaderArgs) => {
     const today = Temporal.Now.plainDateISO();
-    return redirect(`${request.params.city}/${today.toString()}`, 302)
+    return redirect(`${params.city}/${today.toString()}`, 302)
 }
