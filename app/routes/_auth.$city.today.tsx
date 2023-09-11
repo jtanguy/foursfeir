@@ -5,5 +5,5 @@ import type { LoaderArgs } from "@remix-run/node";
 
 export const loader = async ({params}: LoaderArgs) => {
     const today = Temporal.Now.plainDateISO();
-    return redirect(`${params.city}/${today.toString()}`, 302)
+    return redirect(`/${params.city}/${today.toString()}`, 302)
 }
