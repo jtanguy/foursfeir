@@ -29,11 +29,6 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const url = new URL(request.url);
-  const sortBy = url.searchParams.get("sort")
-
-  const sortKey = sortBy === 'alpha' ? 'email' : 'created_at'
-
   const [
     { data: bookings },
     { data: cities },
@@ -47,7 +42,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
       )
       .eq("city", params.city)
       .eq("date", params.date)
-      .order(sortKey, {ascending: true}),
+      .order('created_at', {ascending: true}),
     supabase
       .from("cities")
       .select("capacity, max_capacity")
@@ -209,7 +204,7 @@ export default function Current() {
   const byPeriod = bookings.reduce(
     (acc, booking, index) => ({
       ...acc,
-      [booking.period]: [...acc[booking.period], {index, ...booking}],
+      [booking.period]: [...acc[booking.period], {index: index + 1, ...booking}],
     }),
     { day: [], morning: [], afternoon: [] }
   );
@@ -268,7 +263,7 @@ export default function Current() {
               <Fragment key={period}>
                 <h3>{periods[period]}</h3>
                 <ul className="calendar-people__list" key={period}>
-                  {bookings.map(({ profile, guests }) => {
+                  {bookings.map(({ index, profile, guests }) => {
                     const isDeleteSubmitting =
                       deleteFetcher.state !== "idle" &&
                       deleteFetcher.formData?.get("user_id") == profile.id;
@@ -278,7 +273,7 @@ export default function Current() {
                         .map((p) => `${p[1]} ${periods[p[0]]}`)
                     );
                     return (
-                      <li key={profile.id} aria-busy={isDeleteSubmitting} className={cx({"profile--overflow": profile.index > capacity})}>
+                      <li key={profile.id} aria-busy={isDeleteSubmitting} className={cx({"profile--overflow": index > capacity})}>
                         <Avatar
                           className={cx({
                             "avatar--partial": period !== "day",
