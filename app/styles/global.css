@@ -244,3 +244,7 @@ details.calendar-people[open] > *:not(summary) {
 .day__book svg {
   vertical-align: top;
 }
+
+.profile--overflow {
+  text-decoration: underline dashed var(--del-color);
+}
