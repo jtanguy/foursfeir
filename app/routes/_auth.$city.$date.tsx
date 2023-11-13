@@ -29,6 +29,11 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const url = new URL(request.url);
+  const sortBy = url.searchParams.get("sort")
+
+  const sortKey = sortBy === 'alpha' ? 'email' : 'created_at'
+
   const [
     { data: bookings },
     { data: cities },
@@ -41,7 +46,8 @@ export const loader = async ({ request, params }: LoaderArgs) => {
         "period, profile:user_id(id, email, full_name, avatar_url), guests"
       )
       .eq("city", params.city)
-      .eq("date", params.date),
+      .eq("date", params.date)
+      .order(sortKey, {ascending: true}),
     supabase
       .from("cities")
       .select("capacity, max_capacity")
@@ -201,9 +207,9 @@ export default function Current() {
   const [selfPeriod, setSelfPeriod] = useState(selfBooking?.period ?? "day");
 
   const byPeriod = bookings.reduce(
-    (acc, booking) => ({
+    (acc, booking, index) => ({
       ...acc,
-      [booking.period]: [...acc[booking.period], booking],
+      [booking.period]: [...acc[booking.period], {index, ...booking}],
     }),
     { day: [], morning: [], afternoon: [] }
   );
@@ -272,7 +278,7 @@ export default function Current() {
                         .map((p) => `${p[1]} ${periods[p[0]]}`)
                     );
                     return (
-                      <li key={profile.id} aria-busy={isDeleteSubmitting}>
+                      <li key={profile.id} aria-busy={isDeleteSubmitting} className={cx({"profile--overflow": profile.index > capacity})}>
                         <Avatar
                           className={cx({
                             "avatar--partial": period !== "day",
