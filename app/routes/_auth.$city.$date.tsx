@@ -270,6 +270,7 @@ export default function Current() {
                     const isDeleteSubmitting =
                       deleteFetcher.state !== "idle" &&
                       deleteFetcher.formData?.get("user_id") == profile.id;
+                    const isOverflow = index >= capacity;
                     const guestsString = formatter.format(
                       Object.entries(guests)
                         .filter((p) => p[1] > 0)
@@ -285,9 +286,10 @@ export default function Current() {
                           profile={profile}
                         />
                         <span>
-                          {profile?.full_name ?? profile.email} {index}
+                          {profile?.full_name ?? profile.email}
                         </span>
                         {guestsString && ` (+${guestsString})`}
+                        {isOverflow && ` (Surnuméraire)`}
                         {isAdmin && (
                           <span>
                             <deleteFetcher.Form
