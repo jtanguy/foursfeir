@@ -44,9 +44,12 @@ export function CalendarDay({
   const hasBooking = self != null;
 
   const byPeriod = sortedBookings.reduce(
-    (acc, booking) => ({
+    (acc, booking, index) => ({
       ...acc,
-      [booking.period]: [...acc[booking.period], booking],
+      [booking.period]: [
+        ...acc[booking.period],
+        { index: index + 1, ...booking },
+      ],
     }),
     { day: [], morning: [], afternoon: [] }
   );
@@ -104,7 +107,7 @@ export function CalendarDay({
           <details className="calendar-people">
             <summary className="calendar-people__header">
               <ul className="calendar-people__list calendar-people__list--inline">
-                {sortedBookings.map((booking) => (
+                {sortedBookings.map((booking, index) => (
                   <li
                     key={booking.profile?.id}
                     data-tooltip={`${
@@ -114,6 +117,7 @@ export function CalendarDay({
                     <Avatar
                       className={cx({
                         "avatar--partial": booking.period !== "day",
+                        "avatar--overflow": index >= capacity,
                       })}
                       profile={booking.profile}
                     />
@@ -144,7 +148,7 @@ export function CalendarDay({
                       className="calendar-people__list calendar-people--expanded"
                       key={period}
                     >
-                      {bookings.map(({ profile, guests }) => {
+                      {bookings.map(({ index, profile, guests }) => {
                         const guestsString = formatter.format(
                           Object.entries(guests)
                             .filter((p) => p[1] > 0)
@@ -155,6 +159,7 @@ export function CalendarDay({
                             <Avatar
                               className={cx({
                                 "avatar--partial": period !== "day",
+                                "avatar--overflow": index >= capacity,
                               })}
                               profile={profile}
                             />

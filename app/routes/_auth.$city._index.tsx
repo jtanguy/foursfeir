@@ -36,7 +36,8 @@ export const loader = async ({ request, params }: LoaderArgs) => {
         )
         .eq("city", params.city)
         .gte("date", start.toString())
-        .lte("date", end.toString()),
+        .lte("date", end.toString())
+        .order("created_at", { ascending: true }),
       supabase
         .from("notices")
         .select("date, message, temp_capacity")
@@ -51,8 +52,8 @@ export const loader = async ({ request, params }: LoaderArgs) => {
 
   return json({
     bookings: bookings ?? [],
-    capacity: cities[0].capacity,
-    maxCapacity: cities[0].max_capacity,
+    capacity: cities![0].capacity,
+    maxCapacity: cities![0].max_capacity,
     notices: notices ?? [],
     user,
   });
