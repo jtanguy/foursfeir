@@ -14,12 +14,14 @@ body {
 .header-logo {
   height: 3em;
 }
+
 .header-user {
   --avatar-size: 1.5em;
 }
 
 .header-user button {
-  --color: var(--color); /* To override a change in the inherited button color*/
+  --color: var(--color);
+  /* To override a change in the inherited button color*/
   color: var(--color);
 }
 
@@ -40,7 +42,7 @@ body {
   vertical-align: text-top;
 }
 
-.avatar svg{
+.avatar svg {
   height: var(--avatar-size);
   width: var(--avatar-size);
 }
@@ -50,12 +52,17 @@ button.icon {
   padding: 0 1ex;
   background: none;
   border: none;
-  --color: var(--color); /* To override a change in the inherited button color*/
+  --color: var(--color);
+  /* To override a change in the inherited button color*/
   color: var(--color);
 }
-button.icon:hover, button.icon:active, button.icon:focus {
-    --color: var(--contrast)
+
+button.icon:hover,
+button.icon:active,
+button.icon:focus {
+  --color: var(--contrast)
 }
+
 .hero--axolotl-blue {
   background-image: url("/images/Axolotl_DaVinci_blue.png");
   background-position: center;
@@ -90,7 +97,7 @@ main.container {
   border-inline-start: 0.2rem solid var(--primary-hover);
 }
 
-.calendar-day--end-of-week + .calendar-day {
+.calendar-day--end-of-week+.calendar-day {
   margin-block-start: 3em;
 }
 
@@ -109,7 +116,8 @@ main.container {
   background: var(--form-element-invalid-border-color);
 }
 
-.calendar-day form, .admin-form{
+.calendar-day form,
+.admin-form {
   margin: 0;
   width: 100%;
   height: 100%;
@@ -138,12 +146,15 @@ form.inline-form {
 .no-button {
   border: none;
   background: none;
-  --color: var(--color); /* To override a change in the inherited button color*/
+  --color: var(--color);
+  /* To override a change in the inherited button color*/
   color: var(--color);
 }
 
-.no-button:hover, .no-button:active, .no-button:focus {
-    --color: var(--contrast)
+.no-button:hover,
+.no-button:active,
+.no-button:focus {
+  --color: var(--contrast)
 }
 
 .inline-button {
@@ -164,7 +175,7 @@ form.inline-form {
   }
 }
 
-details.calendar-people[open] > *:not(summary) {
+details.calendar-people[open]>*:not(summary) {
   animation: details-show 150ms ease-out;
 }
 
@@ -173,6 +184,24 @@ details.calendar-people[open] > *:not(summary) {
   width: 100%;
   display: flex;
   align-items: center;
+}
+
+
+.avatar--overflow {
+  --color: var(--del-color);
+}
+
+.avatar--overflow:not(.avatar--partial) {
+  border: 2px solid var(--color)
+}
+
+
+.avatar--overflow {
+  --color: var(--del-color);
+}
+
+.avatar--overflow:not(.avatar--partial) {
+  border: 2px solid var(--color)
 }
 
 .avatar--partial {
@@ -208,7 +237,7 @@ details.calendar-people[open] > *:not(summary) {
   list-style: none;
 }
 
-.calendar-people__list .avatar + span {
+.calendar-people__list .avatar+span {
   margin-inline-start: 1ex;
 }
 
@@ -217,7 +246,7 @@ details.calendar-people[open] > *:not(summary) {
   border-bottom: none;
 }
 
-.calendar-people__list--inline li + li {
+.calendar-people__list--inline li+li {
   margin-inline-start: -0.5ex;
 }
 
@@ -241,10 +270,7 @@ details.calendar-people[open] > *:not(summary) {
   font-size: 20px;
   line-height: 20px;
 }
+
 .day__book svg {
   vertical-align: top;
-}
-
-.profile--overflow {
-  text-decoration: underline dashed var(--del-color);
 }

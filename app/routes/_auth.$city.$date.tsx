@@ -42,7 +42,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
       )
       .eq("city", params.city)
       .eq("date", params.date)
-      .order('created_at', {ascending: true}),
+      .order("created_at", { ascending: true }),
     supabase
       .from("cities")
       .select("capacity, max_capacity")
@@ -204,7 +204,7 @@ export default function Current() {
   const byPeriod = bookings.reduce(
     (acc, booking, index) => ({
       ...acc,
-      [booking.period]: [...acc[booking.period], {index: index + 1, ...booking}],
+      [booking.period]: [...acc[booking.period], { index: index, ...booking }],
     }),
     { day: [], morning: [], afternoon: [] }
   );
@@ -252,7 +252,10 @@ export default function Current() {
       )}
 
       <p>
-        {occupancy}/{Math.min(capacity, maxCapacity)} inscrits. {occupancy > capacity && <>Attention: débordement dans les autres salles à prévoir</>}
+        {occupancy}/{Math.min(capacity, maxCapacity)} inscrits.{" "}
+        {occupancy > capacity && (
+          <>Attention: débordement dans les autres salles à prévoir</>
+        )}
       </p>
 
       <div className="calendar-people">
@@ -267,21 +270,26 @@ export default function Current() {
                     const isDeleteSubmitting =
                       deleteFetcher.state !== "idle" &&
                       deleteFetcher.formData?.get("user_id") == profile.id;
+                    const isOverflow = index >= capacity;
                     const guestsString = formatter.format(
                       Object.entries(guests)
                         .filter((p) => p[1] > 0)
                         .map((p) => `${p[1]} ${periods[p[0]]}`)
                     );
                     return (
-                      <li key={profile.id} aria-busy={isDeleteSubmitting} className={cx({"profile--overflow": index > capacity})}>
+                      <li key={profile.id} aria-busy={isDeleteSubmitting}>
                         <Avatar
                           className={cx({
+                            "avatar--overflow": index >= capacity,
                             "avatar--partial": period !== "day",
                           })}
                           profile={profile}
                         />
-                        <span>{profile?.full_name ?? profile.email}</span>
+                        <span>
+                          {profile?.full_name ?? profile.email}
+                        </span>
                         {guestsString && ` (+${guestsString})`}
+                        {isOverflow && ` (Surnuméraire)`}
                         {isAdmin && (
                           <span>
                             <deleteFetcher.Form
