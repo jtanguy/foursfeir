@@ -4,6 +4,7 @@
   "scripts": {
     "generate:types": "supabase gen types typescript --linked > db_types.ts",
     "build": "remix build",
+    "start": "remix-serve ./build/index.js",
     "dev": "remix dev",
     "typecheck": "tsc"
   },
