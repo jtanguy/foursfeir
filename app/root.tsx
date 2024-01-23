@@ -1,7 +1,7 @@
 import {
   json,
   type LinksFunction,
-  type LoaderArgs,
+  type LoaderFunctionArgs,
   type V2_MetaFunction,
 } from "@remix-run/node";
 import {
@@ -28,7 +28,7 @@ import { FiLogOut, FiGithub } from "react-icons/fi";
 import picoStyles from "@picocss/pico/css/pico.min.css";
 import globalStyles from "~/styles/global.css";
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const response = new Response();
 
   const supabase = createServerClient({ request, response });
@@ -61,11 +61,13 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: globalStyles },
 ];
 
-// eslint-disable-next-line no-extend-native
-Object.defineProperty(Date.prototype, "toTemporalInstant", {
-  value: toTemporalInstant,
-  writable: false,
-});
+if (!Date.prototype.hasOwnProperty("toTemporalInstant")) {
+  // eslint-disable-next-line no-extend-native
+  Object.defineProperty(Date.prototype, "toTemporalInstant", {
+    value: toTemporalInstant,
+    writable: false,
+  });
+}
 
 export default function App() {
   const { env, session, cities } = useLoaderData<typeof loader>();

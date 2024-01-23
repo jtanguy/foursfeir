@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import type { ActionArgs, LoaderArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 import { FiPlus, FiTrash } from "react-icons/fi";
@@ -8,7 +8,7 @@ import { createServerClient } from "utils/supabase.server";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 
-export const loader = async ({ request, params }: LoaderArgs) => {
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const response = new Response();
 
   const supabase = createServerClient({ request, response });
@@ -59,7 +59,7 @@ const schema = zfd.formData(
     }),
   ])
 );
-export const action = async ({ request, params }: ActionArgs) => {
+export const action = async ({ request, params }: ActionFunctionArgs) => {
   if (!params.city) throw new Response("No city given", { status: 400 });
   const response = new Response();
   const supabase = createServerClient({ request, response });

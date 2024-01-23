@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
-import type { LoaderArgs } from "@remix-run/node";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 
 import Avatar from "boring-avatars";
 
@@ -8,7 +8,7 @@ const SIZE = 96;
 const VARIANT = "bauhaus";
 const COLORS = ["#1a2a3a", "#e4426d", "#1d1d2b", "#769cec", "#586f8f"];
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
 
   const explicitName = url.searchParams.get("name");

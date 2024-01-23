@@ -4,34 +4,33 @@
   "scripts": {
     "generate:types": "supabase gen types typescript --linked > db_types.ts",
     "build": "remix build",
+    "start": "remix-serve ./build/index.js",
     "dev": "remix dev",
     "typecheck": "tsc"
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.4.4",
-    "@picocss/pico": "^1.5.10",
-    "@remix-run/node": "^1.19.3",
-    "@remix-run/react": "^1.19.3",
-    "@remix-run/vercel": "^1.19.3",
-    "@supabase/auth-helpers-remix": "^0.2.1",
-    "@vercel/node": "^2.15.10",
+    "@picocss/pico": "^1.5.11",
+    "@remix-run/node": "^2.5.1",
+    "@remix-run/react": "^2.5.1",
+    "@supabase/auth-helpers-remix": "^0.2.6",
     "boring-avatars": "^1.10.1",
-    "classnames": "^2.3.2",
+    "classnames": "^2.5.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-icons": "^4.10.1",
-    "supabase": "^1.88.0",
-    "zod": "^3.22.2",
-    "zod-form-data": "^2.0.1"
+    "react-icons": "^5.0.1",
+    "supabase": "^1.136.2",
+    "zod": "^3.22.4",
+    "zod-form-data": "^2.0.2"
   },
   "devDependencies": {
-    "@remix-run/dev": "^1.19.3",
-    "@remix-run/eslint-config": "^1.19.3",
-    "@remix-run/serve": "^1.19.3",
-    "@types/react": "^18.2.21",
-    "@types/react-dom": "^18.2.7",
-    "eslint": "^8.47.0",
-    "typescript": "^5.1.6"
+    "@remix-run/dev": "^2.5.1",
+    "@remix-run/eslint-config": "^2.5.1",
+    "@remix-run/serve": "^2.5.1",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=14"

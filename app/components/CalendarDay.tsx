@@ -108,13 +108,14 @@ export function CalendarDay({
             <summary className="calendar-people__header">
               <ul className="calendar-people__list calendar-people__list--inline">
                 {sortedBookings.map((booking, index) => {
-                  const isOverflow = index >= capacity;
-                  const overflowStr = isOverflow ? ' (Surnuméraire)' : ""
+                  const isOverflow = index + 1 >= capacity;
+                  const overflowStr = isOverflow ? " (Surnuméraire)" : "";
                   return (
                     <li
                       key={booking.profile?.id}
-                      data-tooltip={`${booking.profile?.full_name ?? booking.profile.email
-                        } - ${periods[booking.period]}${overflowStr}`}
+                      data-tooltip={`${
+                        booking.profile?.full_name ?? booking.profile.email
+                      } - ${periods[booking.period]}${overflowStr}`}
                     >
                       <Avatar
                         className={cx({
@@ -124,7 +125,7 @@ export function CalendarDay({
                         profile={booking.profile}
                       />
                     </li>
-                  )
+                  );
                 })}
                 {!hasBooking && isFuture && !isFull && (
                   <li>
