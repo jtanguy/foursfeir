@@ -1,6 +1,10 @@
 import { Fragment, useState } from "react";
 import { Temporal } from "@js-temporal/polyfill";
-import type { ActionArgs, LinksFunction, LoaderArgs } from "@remix-run/node";
+import type {
+  ActionFunctionArgs,
+  LinksFunction,
+  LoaderFunctionArgs,
+} from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import {
   Form,
@@ -21,7 +25,7 @@ import daily from "~/styles/daily.css";
 import { getOccupancy } from "~/bookingUtils";
 import { FiUserMinus } from "react-icons/fi";
 
-export const loader = async ({ request, params }: LoaderArgs) => {
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const response = new Response();
   const supabase = createServerClient({ request, response });
 
@@ -105,7 +109,7 @@ const schema = zfd.formData(
   ])
 );
 
-export const action = async ({ request, params }: ActionArgs) => {
+export const action = async ({ request, params }: ActionFunctionArgs) => {
   if (!params.city) throw new Response("No city given", { status: 400 });
   if (!params.date) throw new Response("No date given", { status: 400 });
   const response = new Response();
@@ -285,9 +289,7 @@ export default function Current() {
                           })}
                           profile={profile}
                         />
-                        <span>
-                          {profile?.full_name ?? profile.email}
-                        </span>
+                        <span>{profile?.full_name ?? profile.email}</span>
                         {guestsString && ` (+${guestsString})`}
                         {isOverflow && ` (Surnuméraire)`}
                         {isAdmin && (

@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
-import type { ActionArgs, LoaderArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { redirect, json } from "@remix-run/node";
 import { useLoaderData, useParams } from "@remix-run/react";
 import cx from "classnames";
@@ -11,7 +11,7 @@ import { CalendarDay } from "~/components/CalendarDay";
 
 const SATURDAY = 6;
 
-export const loader = async ({ request, params }: LoaderArgs) => {
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const response = new Response();
   const supabase = createServerClient({ request, response });
 
@@ -73,7 +73,7 @@ const schema = zfd.formData(
   ])
 );
 
-export const action = async ({ request, params }: ActionArgs) => {
+export const action = async ({ request, params }: ActionFunctionArgs) => {
   if (!params.city) throw new Response("No city given", { status: 400 });
   const response = new Response();
   const supabase = createServerClient({ request, response });
