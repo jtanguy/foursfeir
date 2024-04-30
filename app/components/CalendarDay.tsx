@@ -36,9 +36,7 @@ export function CalendarDay({
   className,
 }: Props) {
   const fetcher = useFetcher();
-  const sortedBookings = bookings.sort((a, b) =>
-    b.period.localeCompare(a.period)
-  );
+  const sortedBookings = bookings; // Bookings are already sorted by created_at asc
 
   const self = sortedBookings.find((p) => p.profile.id === userId);
   const hasBooking = self != null;
