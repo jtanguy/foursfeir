@@ -111,9 +111,8 @@ export function CalendarDay({
                   return (
                     <li
                       key={booking.profile?.id}
-                      data-tooltip={`${
-                        booking.profile?.full_name ?? booking.profile.email
-                      } - ${periods[booking.period]}${overflowStr}`}
+                      data-tooltip={`${booking.profile?.full_name ?? booking.profile.email
+                        } - ${periods[booking.period]}${overflowStr}`}
                     >
                       <Avatar
                         className={cx({
