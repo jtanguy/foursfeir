@@ -36,9 +36,7 @@ export function CalendarDay({
   className,
 }: Props) {
   const fetcher = useFetcher();
-  const sortedBookings = bookings.sort((a, b) =>
-    b.period.localeCompare(a.period)
-  );
+  const sortedBookings = bookings; // Bookings are already sorted by created_at asc
 
   const self = sortedBookings.find((p) => p.profile.id === userId);
   const hasBooking = self != null;
@@ -113,9 +111,8 @@ export function CalendarDay({
                   return (
                     <li
                       key={booking.profile?.id}
-                      data-tooltip={`${
-                        booking.profile?.full_name ?? booking.profile.email
-                      } - ${periods[booking.period]}${overflowStr}`}
+                      data-tooltip={`${booking.profile?.full_name ?? booking.profile.email
+                        } - ${periods[booking.period]}${overflowStr}`}
                     >
                       <Avatar
                         className={cx({
