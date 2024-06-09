@@ -25,7 +25,7 @@ body {
   color: var(--color);
 }
 
-.header-user ul[role="listbox"] li a::after {
+details.dropdown.header-user ul li::after {
   content: unset;
 }
 
@@ -80,7 +80,7 @@ main.container {
 }
 
 .error {
-  color: var(--form-element-invalid-border-color);
+  color: var(--pico-form-element-invalid-border-color);
 }
 
 .calendar-day {
@@ -93,8 +93,8 @@ main.container {
 }
 
 .calendar-day--today {
-  --card-background-color: var(--primary-focus);
-  border-inline-start: 0.2rem solid var(--primary-hover);
+  --card-background-color: var(--pico-primary-focus);
+  border-inline-start: 0.2rem solid var(--pico-primary-hover);
 }
 
 .calendar-day--end-of-week+.calendar-day {
@@ -113,7 +113,7 @@ main.container {
 
 .calendar-day--full .calendar-day__gauge::-moz-progress-bar,
 .calendar-day--full .calendar-day__gauge::-webkit-progress-value {
-  background: var(--form-element-invalid-border-color);
+  background: var(--pico-form-element-invalid-border-color);
 }
 
 .calendar-day form,
@@ -131,7 +131,7 @@ form.inline-form {
 }
 
 .calendar-day__actions {
-  margin-block-start: var(--typography-spacing-vertical);
+  margin-block-start: var(--pico-typography-spacing-vertical);
   /* margin-inline: var(--grid-spacing-horizontal); */
   display: flex;
   justify-content: space-around;
@@ -157,9 +157,10 @@ form.inline-form {
   --color: var(--contrast)
 }
 
-.inline-button {
+button.inline-button {
   padding: 0;
   margin: 0;
+  width: auto;
 }
 
 .calendar-people {
@@ -186,26 +187,13 @@ details.calendar-people[open]>*:not(summary) {
   align-items: center;
 }
 
-
 .avatar--overflow {
-  --color: var(--del-color);
-}
-
-.avatar--overflow:not(.avatar--partial) {
-  border: 2px solid var(--color)
-}
-
-
-.avatar--overflow {
-  --color: var(--del-color);
-}
-
-.avatar--overflow:not(.avatar--partial) {
-  border: 2px solid var(--color)
+  --color: var(--pico-del-color);
+  border: 2px dotted var(--color)
 }
 
 .avatar--partial {
-  border: 2px dashed var(--color);
+  border: 2px dashed var(--color, var(--pico-color));
 }
 
 .calendar-people h3 {

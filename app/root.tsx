@@ -1,65 +1,23 @@
+import { LinksFunction, LoaderFunctionArgs, json } from "@remix-run/node";
 import {
-  json,
-  type LinksFunction,
-  type LoaderFunctionArgs,
-  type V2_MetaFunction,
-} from "@remix-run/node";
-import {
+  Form,
   Link,
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
   useLoaderData,
   useMatches,
-  useRevalidator,
 } from "@remix-run/react";
 import { toTemporalInstant } from "@js-temporal/polyfill";
 
-import { createServerClient } from "utils/supabase.server";
-import config from "config";
-import { createBrowserClient } from "@supabase/auth-helpers-remix";
-import { useEffect, useState } from "react";
-import type { Database } from "db_types";
-import { FiLogOut, FiGithub } from "react-icons/fi";
-
-import picoStyles from "@picocss/pico/css/pico.min.css";
-import globalStyles from "~/styles/global.css";
-
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const response = new Response();
-
-  const supabase = createServerClient({ request, response });
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const env = {
-    SUPABASE_URL: config.SUPABASE_URL,
-    SUPABASE_ANON_KEY: config.SUPABASE_ANON_KEY,
-  };
-
-  if (session) {
-    const { data: cities } = await supabase
-      .from("admins")
-      .select("city_slug, cities(label)")
-      .eq("user_id", session.user.id);
-
-    return json({ env, session, cities }, { headers: response.headers });
-  }
-
-  return json({ env, session, cities: [] }, { headers: response.headers });
-};
-
-export const meta: V2_MetaFunction = () => [{ title: "FourSFEIR" }];
-
-export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: picoStyles },
-  { rel: "stylesheet", href: globalStyles },
-];
+import picoStyles from "@picocss/pico/css/pico.min.css?url";
+import globalStyles from "~/styles/global.css?url";
+import { FiGithub, FiLogOut } from "react-icons/fi";
+import { authenticator } from "./services/auth.server";
+import { getAdmin } from "./services/db/admins.server";
+import { getCities } from "./services/db/cities.server";
 
 if (!Date.prototype.hasOwnProperty("toTemporalInstant")) {
   // eslint-disable-next-line no-extend-native
@@ -69,39 +27,28 @@ if (!Date.prototype.hasOwnProperty("toTemporalInstant")) {
   });
 }
 
-export default function App() {
-  const { env, session, cities } = useLoaderData<typeof loader>();
-  const { revalidate } = useRevalidator();
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: picoStyles },
+  { rel: "stylesheet", href: globalStyles },
+];
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await authenticator.isAuthenticated(request);
+
+  let cities: { slug: string, label: string }[] = []
+  if (user) {
+    const [admin, allCities] = await Promise.all([getAdmin(user.id), getCities()])
+    cities = admin.flatMap(({ city }) => allCities.filter(c => c.slug === city).map(c => ({ slug: c.slug, label: c.label })))
+  }
+
+  return json({ user, cities })
+}
+
+export function Layout({ children }: { children: React.ReactNode }) {
+  const { user, cities } = useLoaderData<typeof loader>()
+
   const matches = useMatches();
-  const [supabase] = useState(() =>
-    createBrowserClient<Database, "public">(
-      env.SUPABASE_URL,
-      env.SUPABASE_ANON_KEY
-    )
-  );
-  const serverAccessToken = session?.access_token;
 
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (
-        event !== "INITIAL_SESSION" &&
-        session?.access_token !== serverAccessToken
-      ) {
-        // server and client are out of sync.
-        revalidate();
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [serverAccessToken, supabase, revalidate]);
-
-  const user = session?.user;
-
-  const logout = () => supabase.auth.signOut();
 
   return (
     <html lang="en">
@@ -129,43 +76,44 @@ export default function App() {
                   ))}
               </ul>
             </div>
-            <ul>
-              {user ? (
-                <li role="list" dir="rtl" className="header-user">
-                  <a href="#" aria-haspopup="listbox">
-                    <img
-                      className="avatar"
-                      referrerPolicy="no-referrer"
-                      src={user.user_metadata.avatar_url}
-                      alt=""
-                    />
-                    <span className="header-user__name">
-                      {user.user_metadata.full_name}
-                    </span>
-                  </a>
-                  <ul role="listbox">
-                    {cities?.map(({ city_slug, cities }) => (
-                      <li key={city_slug}>
-                        <Link to={`/${city_slug}/admin`}>
-                          {cities.label} admin
-                        </Link>
-                      </li>
-                    ))}
-                    <li>
-                      <button className="icon" type="button" onClick={logout}>
+            {user ? (
+              <details className="dropdown header-user">
+                <summary>
+                  <img
+                    className="avatar"
+                    referrerPolicy="no-referrer"
+                    src={user.avatarUrl}
+                    alt=""
+                  />
+                  <span className="header-user__name">
+                    {user.displayName}
+                  </span>
+                </summary>
+                <ul>
+                  {cities?.map(({ slug, label }) => (
+                    <li key={slug}>
+                      <Link to={`/${slug}/admin`}>
+                        {label} admin
+                      </Link>
+                    </li>
+                  ))}
+                  <li>
+                    <Form id="logout-form" action='/logout' method='post'>
+                      <button className="icon">
                         Déconnexion <FiLogOut aria-label="Logout" />
                       </button>
-                    </li>
-                  </ul>
-                </li>
-              ) : (
+                    </Form>
+                  </li>
+                </ul>
+              </details>
+            ) : (
+              <ul>
                 <li>
                   <Link to="/login">Login</Link>
-                </li>
-              )}
-            </ul>
+                </li></ul>
+            )}
           </nav>
-          <Outlet context={{ supabase }} />
+          {children}
           <footer className="container">
             FourSFEIR (
             <a href="https://github.com/jtanguy/foursfeir">
@@ -179,8 +127,11 @@ export default function App() {
         </>
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
-    </html>
+    </html >
   );
+}
+
+export default function App() {
+  return <Outlet />;
 }

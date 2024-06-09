@@ -4,8 +4,7 @@ A little openspace booking app
 
 ## Features
 
-- Deployed on Vercel
-- Social login via supabase
+- Social login with google
 - Multiple rooms, a.k.a. cities
 - Self booking for full days, mornings or afternoons
 - Temporary guests on a booking
@@ -26,6 +25,15 @@ npm run dev
 ```
 
 Open up [http://localhost:3000](http://localhost:3000) and you should be ready to go!
+
+## Deploying
+
+If you're familiar with deploying Node applications, the built-in Remix app server is production-ready.
+
+Make sure to deploy the output of `npm run build`
+
+- `build/server`
+- `build/client`
 
 ## Links
 

@@ -1,26 +1,18 @@
-import type { LoaderFunction } from "@remix-run/node";
+import type { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, Outlet, useLoaderData } from "@remix-run/react";
-import { createServerClient } from "utils/supabase.server";
+import { RouteMatch } from "react-router";
+import { getUserFromRequest } from "~/services/auth.server";
+import { getCity } from "~/services/db/cities.server";
+import invariant from "~/services/validation.utils.server";
 
-export const loader: LoaderFunction = async ({ request, params }) => {
-  if (!params.city) throw new Response("No city given", { status: 400 });
-
-  const response = new Response();
-  const supabase = createServerClient({ request, response });
-
-  const { data, error } = await supabase
-    .from("cities")
-    .select("slug, label")
-    .eq("slug", params.city);
-
-  if (error) throw error;
-
-  if (data.length === 0)
-    throw new Response(`Could not find city ${params.city}`, { status: 404 });
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+  invariant(params.city, "No city given")
+  await getUserFromRequest(request)
+  const city = await getCity(params.city)
 
   return json({
-    city: data[0].label ?? params.slug,
+    city: city.label ?? params.city,
   });
 };
 
@@ -38,5 +30,5 @@ export default function City() {
 }
 
 export const handle = {
-  breadcrumb: (match) => <Link to={match.pathname}>{match.params.city}</Link>,
+  breadcrumb: (match: RouteMatch) => <Link to={match.pathname}>{match.params.city}</Link>,
 };

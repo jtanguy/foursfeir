@@ -1,11 +1,11 @@
-import { Fragment, useState } from "react";
+import { ChangeEvent, Fragment, useState } from "react";
 import { Temporal } from "@js-temporal/polyfill";
 import type {
   ActionFunctionArgs,
   LinksFunction,
   LoaderFunctionArgs,
 } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import {
   Form,
   useFetcher,
@@ -13,73 +13,58 @@ import {
   useNavigation,
   useParams,
 } from "@remix-run/react";
+import { RouteMatch } from "react-router"
 import cx from "classnames";
 import { zfd } from "zod-form-data";
 import { z } from "zod";
 
-import { periods } from "~/constants";
-import { createServerClient } from "utils/supabase.server";
+import { FiUserMinus } from "react-icons/fi";
 import Avatar from "~/components/Avatar";
 
-import daily from "~/styles/daily.css";
-import { getOccupancy } from "~/bookingUtils";
-import { FiUserMinus } from "react-icons/fi";
+import daily from "~/styles/daily.css?url";
+import { getUserFromRequest } from "~/services/auth.server";
+import { findIsAdmin } from "~/services/db/admins.server";
+import { getCity, getNoticeFor } from "~/services/db/cities.server";
+import { createBooking, deleteBooking, getBookingsFor, getOccupancy, sortBookings } from "~/services/db/bookings.server";
+import { Period, isOverflowBooking, periods } from "~/services/bookings.utils";
+import { groupBookings } from "~/services/bookings.utils";
+import { emailToFoursfeirId, isProfile, profileLoader, saveProfile } from "~/services/db/profiles.server";
+import invariant from "~/services/validation.utils.server";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const response = new Response();
-  const supabase = createServerClient({ request, response });
+  invariant(params.city, "No city given")
+  invariant(params.date, "No date given")
+  const user = await getUserFromRequest(request)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   const [
-    { data: bookings },
-    { data: cities },
-    { data: notices },
-    { data: isAdmin },
+    city,
+    notice,
+    bookings,
+    admin
   ] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select(
-        "period, profile:user_id(id, email, full_name, avatar_url), guests"
-      )
-      .eq("city", params.city)
-      .eq("date", params.date)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("cities")
-      .select("capacity, max_capacity")
-      .eq("slug", params.city),
-    supabase
-      .from("notices")
-      .select("message, temp_capacity")
-      .eq("city", params.city)
-      .eq("date", params.date),
-    supabase.rpc("is_admin", {
-      user_id: user!.id,
-      city: params.city!,
-    }),
+    getCity(params.city),
+    getNoticeFor(params.city, params.date),
+    getBookingsFor(params.city, params.date),
+    findIsAdmin(user.id, params.city)
   ]);
 
-  const excludedIds: string[] = [
-    user!.id,
-    ...(bookings ?? []).map((b) => b.profile.id),
-  ];
+  const profiles = await profileLoader.loadMany(bookings.map(b => b.id))
 
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, email, full_name")
-    .not("id", "in", `(${excludedIds.join(",")})`);
+  const occupancy = getOccupancy(bookings);
+  const grouped = groupBookings(sortBookings(bookings))
 
   return json({
-    bookings: bookings ?? [],
-    capacity: cities[0].capacity,
-    notice: notices[0]?.message,
-    maxCapacity: notices[0]?.temp_capacity ?? cities[0].max_capacity,
-    profiles: profiles ?? [],
+    notice: notice?.message,
+    capacity: city.capacity,
+    tempCapacity: notice?.temp_capacity,
+    maxCapacity: city.max_capacity,
+    bookings: grouped,
+    selfBooking: bookings.find(b => b.id === user.id),
+    occupancy,
+    profiles: profiles.filter(isProfile) ?? [],
     user,
-    isAdmin,
+    admin,
   });
 };
 
@@ -104,80 +89,65 @@ const schema = zfd.formData(
     }),
     z.object({
       _action: z.literal("remove"),
-      user_id: zfd.text(),
+      booking_id: zfd.text(),
     }),
   ])
 );
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  if (!params.city) throw new Response("No city given", { status: 400 });
-  if (!params.date) throw new Response("No date given", { status: 400 });
-  const response = new Response();
-  const supabase = createServerClient({ request, response });
+  invariant(params.city, "No city given")
+  invariant(params.date, "No date given")
+  const user = await getUserFromRequest(request)
 
   const f = schema.parse(await request.formData());
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw redirect("/");
-  }
-
   if (f._action === "book") {
-    const { data: other } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", f.for_user);
 
-    let otherId: string;
+    let other = null;
+    if (f.for_user) {
+      const otherId = emailToFoursfeirId(f.for_user);
+      const other = await profileLoader.load(f.for_user)
 
-    if (other == null || other.length === 0) {
-      // Other email absent
-      const { data: created } = await supabase
-        .from("profiles")
-        .insert([{ email: f.for_user, full_name: f.for_user_name }])
-        .select();
-      otherId = created[0].id;
-    } else {
-      otherId = other[0].id;
-    }
+      if (other == null) {
+        // Create profile on the fly
+        await saveProfile({
+          id: otherId,
+          email: f.for_user,
+          full_name: f.for_user_name ?? f.for_user,
+        })
+      }
 
-    await supabase.from("bookings").insert([
-      {
+      await createBooking({
         city: params.city,
         date: params.date,
-        user_id: otherId,
+        id: otherId,
         period: f.period,
         booked_by: user.id,
-      },
-    ]);
+        guests: {},
+        created_at: new Date().toISOString()
+      })
+    }
 
     return new Response(null, { status: 201 });
   }
 
   if (f._action === "invite") {
-    await supabase.from("bookings").upsert({
+    await createBooking({
       city: params.city,
       date: params.date,
-      user_id: user.id,
+      id: user.id,
       period: f.period,
-      guests: f.guests,
-    });
+      booked_by: null,
+      guests: f.guests ?? {},
+      created_at: new Date().toISOString()
+    })
     return new Response(null, { status: 202 });
   }
 
-  const { data: isAdmin } = await supabase.rpc("is_admin", {
-    user_id: user!.id,
-    city: params.city!,
-  });
-  if (isAdmin && f._action === "remove") {
-    await supabase.from("bookings").delete().match({
-      user_id: f.user_id,
-      city: params.city,
-      date: params.date,
-    });
+
+  const admin = await findIsAdmin(user!.id, params.city!)
+  if (admin && f._action === "remove") {
+    await deleteBooking({ booking_id: f.booking_id, city: params.city, date: params.date })
     return new Response(null, { status: 202 });
   }
 };
@@ -189,46 +159,38 @@ export const links: LinksFunction = () => [
   },
 ];
 
+
 export default function Current() {
   const { date: dateStr } = useParams();
-  const { bookings, capacity, notice, maxCapacity, profiles, user, isAdmin } =
+  const { bookings, selfBooking, occupancy, capacity, notice, tempCapacity, maxCapacity, profiles, admin } =
     useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const deleteFetcher = useFetcher();
 
-  const [showNameInput, setShowNameInput] = useState(false);
 
-  const day = Temporal.PlainDate.from(dateStr);
-  const today = Temporal.Now.plainDateISO();
+  const day = Temporal.PlainDate.from(dateStr!);
+  const today = Temporal.Now.plainDateISO()
   const isFuture = Temporal.PlainDate.compare(day, today) >= 0;
 
-  const selfBooking = bookings.find((b) => b.profile.id === user.id);
+  const actualMaxCapacity = tempCapacity ?? maxCapacity
+
+  const isFull = occupancy >= actualMaxCapacity;
+
+  const [showNameInput, setShowNameInput] = useState(false);
   const [selfPeriod, setSelfPeriod] = useState(selfBooking?.period ?? "day");
 
-  const byPeriod = bookings.reduce(
-    (acc, booking, index) => ({
-      ...acc,
-      [booking.period]: [...acc[booking.period], { index: index, ...booking }],
-    }),
-    { day: [], morning: [], afternoon: [] }
-  );
-
-  const occupancy = getOccupancy(bookings);
-
-  const isFull = occupancy >= maxCapacity;
 
   const formatter = new Intl.ListFormat("fr-FR");
 
-  const handleSelfPeriodChange = (event) => {
-    setSelfPeriod(event.target.value);
+  const handleSelfPeriodChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSelfPeriod(event.target.value as Period);
   };
 
-  const handleColleagueEmailChange = (event) => {
+  const handleColleagueEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
     const emailStr = event.target.value.trim();
     const isEmailLike = emailStr.includes("@");
     const profileExists =
-      profiles.some((p) => p.email.startsWith(emailStr)) ||
-      bookings.some((b) => b.profile.email.startsWith(emailStr));
+      profiles.some((p) => p.email.startsWith(emailStr));
 
     if (!isEmailLike && showNameInput) {
       setShowNameInput(false);
@@ -251,48 +213,50 @@ export default function Current() {
 
       {notice && (
         <h3>
-          Note: {notice}. Capacité réduite à {maxCapacity}
+          Note: {notice}. {tempCapacity != null && <>Capacité réduite à {actualMaxCapacity}</>}
         </h3>
       )}
 
       <p>
-        {occupancy}/{Math.min(capacity, maxCapacity)} inscrits.{" "}
+        {occupancy}/{Math.min(capacity, actualMaxCapacity)} inscrits.{" "}
         {occupancy > capacity && (
           <>Attention: débordement dans les autres salles à prévoir</>
         )}
       </p>
 
       <div className="calendar-people">
-        {Object.keys(periods).map((period) => {
-          const bookings = byPeriod[period];
-          if (bookings.length > 0) {
+        {(['morning', 'day', 'afternoon'] as Period[]).map((period) => {
+          const periodBookings = bookings[period];
+          if (periodBookings.length > 0) {
             return (
               <Fragment key={period}>
                 <h3>{periods[period]}</h3>
                 <ul className="calendar-people__list" key={period}>
-                  {bookings.map(({ index, profile, guests }) => {
+                  {periodBookings.map((booking) => {
+                    const profile = profiles.find(p => p.id === booking.id)!
+
                     const isDeleteSubmitting =
                       deleteFetcher.state !== "idle" &&
                       deleteFetcher.formData?.get("user_id") == profile.id;
-                    const isOverflow = index >= capacity;
+                    const isOverflow = isOverflowBooking(booking, capacity);
                     const guestsString = formatter.format(
-                      Object.entries(guests)
+                      Object.entries(booking.guests)
                         .filter((p) => p[1] > 0)
-                        .map((p) => `${p[1]} ${periods[p[0]]}`)
+                        .map((p) => `${p[1]} ${periods[p[0] as Period]}`)
                     );
                     return (
                       <li key={profile.id} aria-busy={isDeleteSubmitting}>
                         <Avatar
-                          className={cx({
-                            "avatar--overflow": index >= capacity,
-                            "avatar--partial": period !== "day",
+                          className={cx('avatar', {
+                            "avatar--overflow": isOverflow,
+                            "avatar--partial": period != "day",
                           })}
                           profile={profile}
                         />
-                        <span>{profile?.full_name ?? profile.email}</span>
+                        <span>{profile.full_name ?? profile.email}</span>
                         {guestsString && ` (+${guestsString})`}
                         {isOverflow && ` (Surnuméraire)`}
-                        {isAdmin && (
+                        {admin && isFuture && (
                           <span>
                             <deleteFetcher.Form
                               method="post"
@@ -300,8 +264,8 @@ export default function Current() {
                             >
                               <input
                                 type="hidden"
-                                name="user_id"
-                                value={profile.id}
+                                name="booking_id"
+                                value={booking.booking_id}
                               />
 
                               <button
@@ -376,7 +340,7 @@ export default function Current() {
                     type="number"
                     name="guests.day"
                     min="0"
-                    max={capacity - bookings.length}
+                    max={capacity - occupancy}
                     defaultValue={selfBooking?.guests?.day ?? 0}
                     disabled={selfPeriod !== "day"}
                   />
@@ -387,7 +351,7 @@ export default function Current() {
                     type="number"
                     name="guests.morning"
                     min="0"
-                    max={capacity - bookings.length}
+                    max={capacity - occupancy}
                     defaultValue={selfBooking?.guests?.morning ?? 0}
                     disabled={selfPeriod === "afternoon"}
                   />
@@ -398,7 +362,7 @@ export default function Current() {
                     type="number"
                     name="guests.afternoon"
                     min="0"
-                    max={capacity - bookings.length}
+                    max={capacity - occupancy}
                     defaultValue={selfBooking?.guests?.afternoon ?? 0}
                     disabled={selfPeriod === "morning"}
                   />
@@ -479,6 +443,7 @@ export default function Current() {
   );
 }
 
+
 export const handle = {
-  breadcrumb: (match) => <>{match.params.date}</>,
+  breadcrumb: (match: RouteMatch) => <>{match.params.date}</>,
 };
