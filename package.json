@@ -11,6 +11,8 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@google-cloud/datastore": "^9.0.0",
+    "@js-temporal/polyfill": "^0.4.4",
     "@picocss/pico": "^2.0.6",
     "@remix-run/node": "^2.8.1",
     "@remix-run/react": "^2.8.1",

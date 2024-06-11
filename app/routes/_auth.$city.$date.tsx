@@ -270,7 +270,6 @@ export default function Current() {
 
                               <button
                                 className="inline-button icon"
-                                role="button"
                                 name="_action"
                                 value="remove"
                               >

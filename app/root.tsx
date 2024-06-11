@@ -82,11 +82,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <img
                     className="avatar"
                     referrerPolicy="no-referrer"
-                    src={user.avatarUrl}
+                    src={user.avatar_url}
                     alt=""
                   />
                   <span className="header-user__name">
-                    {user.displayName}
+                    {user.full_name}
                   </span>
                 </summary>
                 <ul>
