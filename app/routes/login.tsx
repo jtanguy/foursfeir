@@ -1,7 +1,7 @@
-import { LoaderFunctionArgs, json } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 
-export function loader({ }: LoaderFunctionArgs) {
+export function loader() {
 	return json({ method: process.env.OFFLINE === "true" ? 'offline' : 'google' })
 }
 

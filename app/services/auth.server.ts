@@ -6,7 +6,7 @@ import { Profile, emailToFoursfeirId } from "./db/profiles.server";
 
 // Create an instance of the authenticator, pass a generic with what
 // strategies will return and will store in the session
-let authenticator = new Authenticator<Profile>(sessionStorage);
+const authenticator = new Authenticator<Profile>(sessionStorage);
 
 const googleStrategy = new GoogleStrategy<Profile>(
   {

@@ -1,5 +1,5 @@
 import cx from "classnames";
-import { ReactElement, JSXElementConstructor, ReactNode } from "react";
+
 import { Profile } from "~/services/db/profiles.server";
 
 type Props = {

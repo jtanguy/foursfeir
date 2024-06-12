@@ -50,8 +50,6 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
   const f = schema.parse(await request.formData());
 
-  const user = await getUserFromRequest(request)
-
   if (f._action === "create") {
     await createNotice({ city: params.city, date: f.date, message: f.message, temp_capacity: f.temp_capacity, created_at: new Date().toISOString() })
     return new Response(null, { status: 201 });
@@ -89,7 +87,6 @@ export default function CityAdmin() {
                   <input type="hidden" name="date" value={notice.date} />
                   <button
                     className="inline-button icon"
-                    role="button"
                     name="_action"
                     value="delete"
                   >
@@ -121,7 +118,6 @@ export default function CityAdmin() {
               <Form method="post" id="create-notice">
                 <button
                   className="inline-button icon"
-                  role="button"
                   name="_action"
                   value="create"
                 >

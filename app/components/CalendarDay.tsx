@@ -180,7 +180,7 @@ export function CalendarDay({
                   ) : (
                     <details className="dropdown">
                       <summary role="button">
-                        S'inscrire
+                        S&apos;inscrire
                       </summary>
                       <ul>
                         <li>

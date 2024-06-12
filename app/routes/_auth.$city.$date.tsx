@@ -26,8 +26,7 @@ import { getUserFromRequest } from "~/services/auth.server";
 import { findIsAdmin } from "~/services/db/admins.server";
 import { getCity, getNoticeFor } from "~/services/db/cities.server";
 import { createBooking, deleteBooking, getBookingsFor, getOccupancy, sortBookings } from "~/services/db/bookings.server";
-import { Period, isOverflowBooking, periods } from "~/services/bookings.utils";
-import { groupBookings } from "~/services/bookings.utils";
+import { Period, isOverflowBooking, periods , groupBookings } from "~/services/bookings.utils";
 import { emailToFoursfeirId, isProfile, profileLoader, saveProfile } from "~/services/db/profiles.server";
 import invariant from "~/services/validation.utils.server";
 
@@ -103,7 +102,6 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
   if (f._action === "book") {
 
-    let other = null;
     if (f.for_user) {
       const otherId = emailToFoursfeirId(f.for_user);
       const other = await profileLoader.load(f.for_user)

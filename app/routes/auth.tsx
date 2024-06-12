@@ -2,7 +2,7 @@ import { ActionFunctionArgs, redirect } from '@remix-run/node'
 import { authenticator } from '~/services/auth.server'
 import { saveProfile } from '~/services/db/profiles.server'
 
-export let loader = () => redirect('/login')
+export const loader = () => redirect('/login')
 
 export async function action({ request }: ActionFunctionArgs) {
 	const method = process.env.OFFLINE === 'true' ? "offline" : "google"
