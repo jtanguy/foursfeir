@@ -1,4 +1,5 @@
 #!/usr/bin/env zx
+
 import { Datastore } from '@google-cloud/datastore'
 
 const datastore = new Datastore({
@@ -34,46 +35,66 @@ if (argv.reset) {
 }
 
 await spinner('Importing cities', async () => {
-	const cities = await fs.readJSON(path.join(__dirname, './data/cities.json'))
-	for await (const city of cities) {
-		const key = datastore.key([KINDS.city, city.slug])
-		await datastore.save({ key, data: city })
+	try {
+		const cities = await fs.readJSON(path.join(__dirname, './data/cities.json'))
+		for await (const city of cities) {
+			const key = datastore.key([KINDS.city, city.slug])
+			await datastore.save({ key, data: city })
+		}
+		console.log(`Saved ${cities.length} cities`)
+	} catch(error) {
+		console.error('./data/cities.json not found')
 	}
-	console.log(`Saved ${cities.length} cities`)
 })
 
 await spinner('Importing notices', async () => {
-	const notices = await fs.readJSON(path.join(__dirname, './data/notices.json'))
-	for await (const notice of notices) {
-		const key = datastore.key([KINDS.city, notice.city, KINDS.notice, notice.date])
-		await datastore.save({ key, data: notice })
+	try {
+		const notices = await fs.readJSON(path.join(__dirname, './data/notices.json'))
+		for await (const notice of notices) {
+			const key = datastore.key([KINDS.city, notice.city, KINDS.notice, notice.date])
+			await datastore.save({ key, data: notice })
+		}
+		console.log(`Saved ${notices.length} notices`)
+	} catch(error) {
+		console.error('./data/notices.json not found')
 	}
-	console.log(`Saved ${notices.length} notices`)
 })
 
 await spinner('Importing profiles', async () => {
-	const profiles = await fs.readJSON(path.join(__dirname, './data/profiles.json'))
-	for await (const profile of profiles) {
-		const key = datastore.key([KINDS.profile, profile.id])
-		await datastore.save({ key, data: profile })
+	try {
+		const profiles = await fs.readJSON(path.join(__dirname, './data/profiles.json'))
+		for await (const profile of profiles) {
+			const key = datastore.key([KINDS.profile, profile.id])
+			await datastore.save({ key, data: profile })
+		}
+		console.log(`Saved ${profiles.length} profiles`)
+	} catch(error) {
+		console.error('./data/profiles.json not found')
 	}
-	console.log(`Saved ${profiles.length} profiles`)
 })
 
 await spinner('Importing admins', async () => {
-	const admins = await fs.readJSON(path.join(__dirname, './data/admins.json'))
-	for await (const admin of admins) {
-		const key = datastore.key([KINDS.city, admin.city, KINDS.admin])
-		await datastore.save({ key, data: admin })
+	try {
+		const admins = await fs.readJSON(path.join(__dirname, './data/admins.json'))
+		for await (const admin of admins) {
+			const key = datastore.key([KINDS.city, admin.city, KINDS.admin])
+			await datastore.save({ key, data: admin })
+		}
+		console.log(`Saved ${admins.length} admins`)
+	} catch(error) {
+		console.log('./data/admins.json not found')
 	}
-	console.log(`Saved ${admins.length} admins`)
 })
 
 await spinner('Importing bookings', async () => {
-	const bookings = await fs.readJSON(path.join(__dirname, './data/bookings.json'))
-	for await (const booking of bookings) {
-		const key = datastore.key([KINDS.city, booking.city, KINDS.date, booking.date, KINDS.booking])
-		await datastore.save({ key, data: booking })
+	try {
+		const bookings = await fs.readJSON(path.join(__dirname, './data/bookings.json'))
+		for await (const booking of bookings) {
+			const key = datastore.key([KINDS.city, booking.city, KINDS.date, booking.date, KINDS.booking])
+			await datastore.save({ key, data: booking })
+		}
+		console.log(`Saved ${bookings.length} bookings`)
+	} catch (error) {
+		console.error('./data/bookings.json not found')
 	}
-	console.log(`Saved ${bookings.length} bookings`)
 })
