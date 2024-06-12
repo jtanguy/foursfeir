@@ -20,7 +20,8 @@ export function isProfile(p: Profile | Error | null): p is Profile {
 
 export const profileLoader = new DataLoader(async (userIds: ReadonlyArray<string>) => {
 	if (process.env.OFFLINE == "true") {
-		const data = await import('../../../scripts/data/profiles.json');
+		const profilePath = '../../../scripts/data/profiles.json';
+		const data = await import(profilePath);
 		return userIds.map(u => {
 			const found = data.default.find(p => p.id === u)
 			if (!found) return null

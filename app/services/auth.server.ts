@@ -30,7 +30,8 @@ const googleStrategy = new GoogleStrategy<Profile>(
 
 const emailStrategy = new FormStrategy<Profile>(async ({ form }) => {
   const email = form.get('email')
-  const profiles = await import('../../scripts/data/profiles.json')
+  const profilePath = '../../scripts/data/profiles.json'
+  const profiles = await import(profilePath)
   const user = profiles.default.find(p => p.email === email)
   if (!user) {
     throw new Error('User not found')
