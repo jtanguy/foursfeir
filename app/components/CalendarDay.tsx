@@ -7,6 +7,7 @@ import Avatar from "./Avatar";
 import { Fragment } from "react";
 import { IndexedBooking, periods, groupBookings, Period, isOverflowBooking } from "~/services/bookings.utils";
 import { Profile } from "~/services/db/profiles.server";
+import { emailToFoursfeirId } from "~/services/profiles.utils";
 
 type Props = {
   date: Temporal.PlainDate;
@@ -32,11 +33,8 @@ export function CalendarDay({
   className,
 }: Props) {
   const fetcher = useFetcher();
-  const sortedBookings = bookings.sort((a, b) =>
-    b.period.localeCompare(a.period)
-  );
 
-  const self = sortedBookings.find((p) => p.profile?.id === userId);
+  const self = bookings.find((p) => emailToFoursfeirId(p.profile?.email) === userId);
   const hasBooking = self != null;
 
   const byPeriod = groupBookings(bookings)
@@ -94,7 +92,7 @@ export function CalendarDay({
           <details className="calendar-people">
             <summary className="calendar-people__header">
               <ul className="calendar-people__list calendar-people__list--inline">
-                {sortedBookings.map((booking) => {
+                {bookings.map((booking) => {
                   const isOverflow = isOverflowBooking(booking, capacity)
                   const overflowStr = isOverflow ? " (Surnuméraire)" : "";
                   return (

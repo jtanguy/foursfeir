@@ -25,10 +25,11 @@ import daily from "~/styles/daily.css?url";
 import { getUserFromRequest } from "~/services/auth.server";
 import { findIsAdmin } from "~/services/db/admins.server";
 import { getCity, getNoticeFor } from "~/services/db/cities.server";
-import { createBooking, deleteBooking, getBookingsFor, getOccupancy, sortBookings } from "~/services/db/bookings.server";
+import { createBooking, deleteBooking, getBookingsFor, getOccupancy, withIndex } from "~/services/db/bookings.server";
 import { Period, isOverflowBooking, periods , groupBookings } from "~/services/bookings.utils";
-import { emailToFoursfeirId, isProfile, profileLoader, saveProfile } from "~/services/db/profiles.server";
+import { getProfiles, isProfile, profileLoader, saveProfile } from "~/services/db/profiles.server";
 import invariant from "~/services/validation.utils.server";
+import { emailToFoursfeirId } from "~/services/profiles.utils";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   invariant(params.city, "No city given")
@@ -39,7 +40,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const [
     city,
     notice,
-    bookings,
+    rawBookings,
     admin
   ] = await Promise.all([
     getCity(params.city),
@@ -48,10 +49,11 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     findIsAdmin(user.id, params.city)
   ]);
 
-  const profiles = await profileLoader.loadMany(bookings.map(b => b.id))
+  const profiles = await getProfiles()
 
+  const bookings = rawBookings.map(withIndex)
   const occupancy = getOccupancy(bookings);
-  const grouped = groupBookings(sortBookings(bookings))
+  const grouped = groupBookings(bookings)
 
   return json({
     notice: notice?.message,
@@ -59,7 +61,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     tempCapacity: notice?.temp_capacity,
     maxCapacity: city.max_capacity,
     bookings: grouped,
-    selfBooking: bookings.find(b => b.id === user.id),
+    selfBooking: bookings.find(b => b.user_id === user.id),
     occupancy,
     profiles: profiles.filter(isProfile) ?? [],
     user,
@@ -104,25 +106,31 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
     if (f.for_user) {
       const otherId = emailToFoursfeirId(f.for_user);
-      const other = await profileLoader.load(f.for_user)
+      const other = await profileLoader.load(otherId)
 
       if (other == null) {
+        profileLoader.clear(otherId)
         // Create profile on the fly
         await saveProfile({
-          id: otherId,
           email: f.for_user,
           full_name: f.for_user_name ?? f.for_user,
         })
       }
 
+      const previousBookings = await getBookingsFor(params.city, params.date, otherId)
+
+      if(previousBookings.length > 0) {
+        await Promise.all(previousBookings.map(({booking_id, city, date}) => deleteBooking({booking_id, city, date})))
+      }
+
       await createBooking({
         city: params.city,
         date: params.date,
-        id: otherId,
+        user_id: otherId,
         period: f.period,
-        booked_by: user.id,
+        booked_by: emailToFoursfeirId(user.email),
         guests: {},
-        created_at: new Date().toISOString()
+        created_at: previousBookings?.[0].created_at ?? new Date().toISOString()
       })
     }
 
@@ -130,14 +138,31 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   }
 
   if (f._action === "invite") {
+    const previousBookings = await getBookingsFor(params.city, params.date, user.id)
+
+    if(previousBookings.length > 0) {
+      await Promise.all(previousBookings.map(({booking_id, city, date}) => deleteBooking({booking_id, city, date})))
+    }
+
+    const other = await profileLoader.load(user.id)
+
+    if(!other) {
+      profileLoader.clear(user.id)
+      await saveProfile({
+        email: user.email,
+        full_name: user.full_name,
+        avatar_url: user.avatar_url
+      })
+    }
+
     await createBooking({
       city: params.city,
       date: params.date,
-      id: user.id,
+      user_id: emailToFoursfeirId(user.email),
       period: f.period,
       booked_by: null,
       guests: f.guests ?? {},
-      created_at: new Date().toISOString()
+      created_at: previousBookings?.[0].created_at ?? new Date().toISOString()
     })
     return new Response(null, { status: 202 });
   }
@@ -165,7 +190,6 @@ export default function Current() {
   const navigation = useNavigation();
   const deleteFetcher = useFetcher();
 
-
   const day = Temporal.PlainDate.from(dateStr!);
   const today = Temporal.Now.plainDateISO()
   const isFuture = Temporal.PlainDate.compare(day, today) >= 0;
@@ -190,12 +214,10 @@ export default function Current() {
     const profileExists =
       profiles.some((p) => p.email.startsWith(emailStr));
 
-    if (!isEmailLike && showNameInput) {
-      setShowNameInput(false);
-    }
-
-    if (isEmailLike && !showNameInput && !profileExists) {
+    if (isEmailLike && !profileExists) {
       setShowNameInput(true);
+    } else {
+      setShowNameInput(false);
     }
   };
 
@@ -231,7 +253,7 @@ export default function Current() {
                 <h3>{periods[period]}</h3>
                 <ul className="calendar-people__list" key={period}>
                   {periodBookings.map((booking) => {
-                    const profile = profiles.find(p => p.id === booking.id)!
+                    const profile = profiles.find(p => p.id === booking.user_id)!
 
                     const isDeleteSubmitting =
                       deleteFetcher.state !== "idle" &&

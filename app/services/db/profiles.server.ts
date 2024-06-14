@@ -1,19 +1,12 @@
-import { NIL, v5 } from "uuid"
 import DataLoader from "dataloader";
 import { KINDS, client } from "./client.server"
+import { emailToFoursfeirId } from "../profiles.utils";
 
 export type Profile = {
-	id: string,
 	full_name: string,
 	email: string,
 	avatar_url?: string,
 }
-
-export function emailToFoursfeirId(email: string): string {
-	const foursfeir_ns = v5('foursfeir', NIL)
-	return v5(email, foursfeir_ns)
-}
-
 export function isProfile(p: Profile | Error | null): p is Profile {
 	return !(p instanceof Error) && p?.email != null
 }
@@ -33,7 +26,7 @@ export const profileLoader = new DataLoader(async (userIds: ReadonlyArray<string
 		})
 	}
 	const [results] = await client.get(userIds.map(u => client.key([KINDS.profile, u])))
-	return userIds.map(u => (results as Profile[]).find(p => p.id === u) ?? null)
+	return userIds.map(u => (results as Profile[]).find(p => p[client.KEY].name === u) ?? null)
 })
 
 
@@ -45,6 +38,11 @@ export async function getProfile(user_id: string): Promise<Profile> {
 	return res;
 }
 
-export async function saveProfile(profile: Profile): Promise<void> {
-	await client.save({ key: client.key([KINDS.profile, profile.id]), data: profile })
+export async function getProfiles(): Promise<Profile[][]> {
+	const [profiles] = await client.createQuery(KINDS.profile).run()
+	return profiles.map((profile) => ({...profile, id: profile[client.KEY].name}))
+}
+
+export function saveProfile(profile: Profile): Promise<void> {
+	return client.save({ key: client.key([KINDS.profile, emailToFoursfeirId(profile.email)]), data: profile })
 }

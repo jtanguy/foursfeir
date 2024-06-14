@@ -12,10 +12,17 @@ A little openspace booking app
 
 ## Development
 
+Prerequisites :
+
+- Install [gcloud CLI](https://cloud.google.com/sdk/docs/install?hl=fr)
+- Init gcloud with `gcloud init`
+- Set up Application Default Credentials for a local development environnement by `gcloud auth application-default login`
+- Copy `.env.example` to`.env`, fill environnement variables.
+
 To run this locally, make sure your project's local dependencies are installed:
 
 ```sh
-npm install
+npm ci
 ```
 
 Afterwards, start the Remix development server like so:
@@ -26,9 +33,23 @@ npm run dev
 
 Open up [http://localhost:3000](http://localhost:3000) and you should be ready to go!
 
-## Seed
 
-npx zx scripts/seed.mjs
+
+### Create an index on datastore
+
+Run this command
+```
+cloud datastore indexes create YOUR_INDEX_FILE
+```
+
+## Migration
+
+Extract each tables to a csv file and put it inside the `scripts/data` folder.
+
+Run `npx zx scripts/seed.mjs` to migrate the data
+
+Option : --reset to delete all data
+
 
 ## Deploying
 

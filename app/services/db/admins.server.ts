@@ -12,6 +12,6 @@ export async function getAdmin(user_id: string): Promise<Admin[]> {
 export async function findIsAdmin(user_id: string, citySlug: string): Promise<boolean> {
 	const query = client.createQuery(KINDS.admin).filter('id', user_id).hasAncestor(client.key([KINDS.city, citySlug]))
 	const [res] = await query.run()
-	return !!res;
+	return !!res.length;
 
 }

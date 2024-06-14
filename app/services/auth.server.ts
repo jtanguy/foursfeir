@@ -2,7 +2,8 @@ import { Authenticator } from "remix-auth";
 import { GoogleStrategy } from "remix-auth-google";
 import { FormStrategy } from "remix-auth-form"
 import { sessionStorage } from "~/services/session.server";
-import { Profile, emailToFoursfeirId } from "./db/profiles.server";
+import { Profile } from "./db/profiles.server";
+import { emailToFoursfeirId } from "./profiles.utils";
 
 // Create an instance of the authenticator, pass a generic with what
 // strategies will return and will store in the session
