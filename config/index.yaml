@@ -8,14 +8,8 @@ indexes:
 - kind: Booking
   ancestor: yes
   properties:
-  - name: created_at
-- kind: Booking
-  ancestor: yes
-  properties:
   - name: user_id
-  - name: created_at
 - kind: Booking
   ancestor: yes
   properties:
   - name: date
-  - name: created_at

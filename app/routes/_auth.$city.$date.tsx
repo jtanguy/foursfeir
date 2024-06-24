@@ -130,7 +130,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         period: f.period,
         booked_by: emailToFoursfeirId(user.email),
         guests: {},
-        created_at: previousBookings?.[0].created_at ?? new Date().toISOString()
+        created_at: previousBookings?.[0]?.created_at ?? new Date().toISOString()
       })
     }
 

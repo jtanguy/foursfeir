@@ -43,6 +43,6 @@ export async function getProfiles(): Promise<Profile[][]> {
 	return profiles.map((profile) => ({...profile, id: profile[client.KEY].name}))
 }
 
-export function saveProfile(profile: Profile): Promise<void> {
+export function saveProfile(profile: Profile) {
 	return client.save({ key: client.key([KINDS.profile, emailToFoursfeirId(profile.email)]), data: profile })
 }
