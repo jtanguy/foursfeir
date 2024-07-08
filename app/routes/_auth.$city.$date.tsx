@@ -148,6 +148,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
     if(!other) {
       profileLoader.clear(user.id)
+      // we could remove this because the profile is created when the user logged
       await saveProfile({
         email: user.email,
         full_name: user.full_name,

@@ -1,6 +1,5 @@
 import { ActionFunctionArgs, redirect } from '@remix-run/node'
 import { authenticator } from '~/services/auth.server'
-import { saveProfile } from '~/services/db/profiles.server'
 
 export const loader = () => redirect('/login')
 
@@ -17,6 +16,5 @@ export async function action({ request }: ActionFunctionArgs) {
 		// Check login ony, the session will be created by the /auth/callback route
 		user = await authenticator.authenticate(method, request)
 	}
-	await saveProfile(user)
 	return user
 }
