@@ -7,9 +7,9 @@ import { getCity } from "~/services/db/cities.server";
 import invariant from "~/services/validation.utils.server";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  invariant(params.city, "No city given")
-  await getUserFromRequest(request)
-  const city = await getCity(params.city)
+  invariant(params.city, "No city given");
+  await getUserFromRequest(request);
+  const city = await getCity(params.city);
 
   return json({
     city: city.label ?? params.city,
@@ -30,5 +30,7 @@ export default function City() {
 }
 
 export const handle = {
-  breadcrumb: (match: RouteMatch) => <Link to={match.pathname}>{match.params.city}</Link>,
+  breadcrumb: (match: RouteMatch) => (
+    <Link to={match.pathname}>{match.params.city}</Link>
+  ),
 };

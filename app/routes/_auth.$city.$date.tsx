@@ -13,7 +13,7 @@ import {
   useNavigation,
   useParams,
 } from "@remix-run/react";
-import { RouteMatch } from "react-router"
+import { RouteMatch } from "react-router";
 import cx from "classnames";
 import { zfd } from "zod-form-data";
 import { z } from "zod";
@@ -25,35 +25,45 @@ import daily from "~/styles/daily.css?url";
 import { getUserFromRequest } from "~/services/auth.server";
 import { findIsAdmin } from "~/services/db/admins.server";
 import { getCity, getNoticeFor } from "~/services/db/cities.server";
-import { createBooking, deleteBooking, getBookingsFor, getOccupancy, withIndex } from "~/services/db/bookings.server";
-import { Period, isOverflowBooking, periods , groupBookings } from "~/services/bookings.utils";
-import { getProfiles, isProfile, profileLoader, saveProfile } from "~/services/db/profiles.server";
+import {
+  createBooking,
+  deleteBooking,
+  getBookingsFor,
+  getOccupancy,
+  withIndex,
+} from "~/services/db/bookings.server";
+import {
+  Period,
+  isOverflowBooking,
+  periods,
+  groupBookings,
+} from "~/services/bookings.utils";
+import {
+  getProfiles,
+  isProfile,
+  profileLoader,
+  saveProfile,
+} from "~/services/db/profiles.server";
 import invariant from "~/services/validation.utils.server";
 import { emailToFoursfeirId } from "~/services/profiles.utils";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  invariant(params.city, "No city given")
-  invariant(params.date, "No date given")
-  const user = await getUserFromRequest(request)
+  invariant(params.city, "No city given");
+  invariant(params.date, "No date given");
+  const user = await getUserFromRequest(request);
 
-
-  const [
-    city,
-    notice,
-    rawBookings,
-    admin
-  ] = await Promise.all([
+  const [city, notice, rawBookings, admin] = await Promise.all([
     getCity(params.city),
     getNoticeFor(params.city, params.date),
     getBookingsFor(params.city, params.date),
-    findIsAdmin(user.id, params.city)
+    findIsAdmin(user.id, params.city),
   ]);
 
-  const profiles = await getProfiles()
+  const profiles = await getProfiles();
 
-  const bookings = rawBookings.map(withIndex)
+  const bookings = rawBookings.map(withIndex);
   const occupancy = getOccupancy(bookings);
-  const grouped = groupBookings(bookings)
+  const grouped = groupBookings(bookings);
 
   return json({
     notice: notice?.message,
@@ -61,7 +71,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     tempCapacity: notice?.temp_capacity,
     maxCapacity: city.max_capacity,
     bookings: grouped,
-    selfBooking: bookings.find(b => b.user_id === user.id),
+    selfBooking: bookings.find((b) => b.user_id === user.id),
     occupancy,
     profiles: profiles.filter(isProfile) ?? [],
     user,
@@ -92,35 +102,42 @@ const schema = zfd.formData(
       _action: z.literal("remove"),
       booking_id: zfd.text(),
     }),
-  ])
+  ]),
 );
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  invariant(params.city, "No city given")
-  invariant(params.date, "No date given")
-  const user = await getUserFromRequest(request)
+  invariant(params.city, "No city given");
+  invariant(params.date, "No date given");
+  const user = await getUserFromRequest(request);
 
   const f = schema.parse(await request.formData());
 
   if (f._action === "book") {
-
     if (f.for_user) {
       const otherId = emailToFoursfeirId(f.for_user);
-      const other = await profileLoader.load(otherId)
+      const other = await profileLoader.load(otherId);
 
       if (other == null) {
-        profileLoader.clear(otherId)
+        profileLoader.clear(otherId);
         // Create profile on the fly
         await saveProfile({
           email: f.for_user,
           full_name: f.for_user_name ?? f.for_user,
-        })
+        });
       }
 
-      const previousBookings = await getBookingsFor(params.city, params.date, otherId)
+      const previousBookings = await getBookingsFor(
+        params.city,
+        params.date,
+        otherId,
+      );
 
-      if(previousBookings.length > 0) {
-        await Promise.all(previousBookings.map(({booking_id, city, date}) => deleteBooking({booking_id, city, date})))
+      if (previousBookings.length > 0) {
+        await Promise.all(
+          previousBookings.map(({ booking_id, city, date }) =>
+            deleteBooking({ booking_id, city, date }),
+          ),
+        );
       }
 
       await createBooking({
@@ -130,30 +147,39 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         period: f.period,
         booked_by: emailToFoursfeirId(user.email),
         guests: {},
-        created_at: previousBookings?.[0]?.created_at ?? new Date().toISOString()
-      })
+        created_at:
+          previousBookings?.[0]?.created_at ?? new Date().toISOString(),
+      });
     }
 
     return new Response(null, { status: 201 });
   }
 
   if (f._action === "invite") {
-    const previousBookings = await getBookingsFor(params.city, params.date, user.id)
+    const previousBookings = await getBookingsFor(
+      params.city,
+      params.date,
+      user.id,
+    );
 
-    if(previousBookings.length > 0) {
-      await Promise.all(previousBookings.map(({booking_id, city, date}) => deleteBooking({booking_id, city, date})))
+    if (previousBookings.length > 0) {
+      await Promise.all(
+        previousBookings.map(({ booking_id, city, date }) =>
+          deleteBooking({ booking_id, city, date }),
+        ),
+      );
     }
 
-    const other = await profileLoader.load(user.id)
+    const other = await profileLoader.load(user.id);
 
-    if(!other) {
-      profileLoader.clear(user.id)
+    if (!other) {
+      profileLoader.clear(user.id);
       // we could remove this because the profile is created when the user logged
       await saveProfile({
         email: user.email,
         full_name: user.full_name,
-        avatar_url: user.avatar_url
-      })
+        avatar_url: user.avatar_url,
+      });
     }
 
     await createBooking({
@@ -163,15 +189,18 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       period: f.period,
       booked_by: null,
       guests: f.guests ?? {},
-      created_at: previousBookings?.[0].created_at ?? new Date().toISOString()
-    })
+      created_at: previousBookings?.[0].created_at ?? new Date().toISOString(),
+    });
     return new Response(null, { status: 202 });
   }
 
-
-  const admin = await findIsAdmin(user!.id, params.city!)
+  const admin = await findIsAdmin(user!.id, params.city!);
   if (admin && f._action === "remove") {
-    await deleteBooking({ booking_id: f.booking_id, city: params.city, date: params.date })
+    await deleteBooking({
+      booking_id: f.booking_id,
+      city: params.city,
+      date: params.date,
+    });
     return new Response(null, { status: 202 });
   }
 };
@@ -183,25 +212,32 @@ export const links: LinksFunction = () => [
   },
 ];
 
-
 export default function Current() {
   const { date: dateStr } = useParams();
-  const { bookings, selfBooking, occupancy, capacity, notice, tempCapacity, maxCapacity, profiles, admin } =
-    useLoaderData<typeof loader>();
+  const {
+    bookings,
+    selfBooking,
+    occupancy,
+    capacity,
+    notice,
+    tempCapacity,
+    maxCapacity,
+    profiles,
+    admin,
+  } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const deleteFetcher = useFetcher();
 
   const day = Temporal.PlainDate.from(dateStr!);
-  const today = Temporal.Now.plainDateISO()
+  const today = Temporal.Now.plainDateISO();
   const isFuture = Temporal.PlainDate.compare(day, today) >= 0;
 
-  const actualMaxCapacity = tempCapacity ?? maxCapacity
+  const actualMaxCapacity = tempCapacity ?? maxCapacity;
 
   const isFull = occupancy >= actualMaxCapacity;
 
   const [showNameInput, setShowNameInput] = useState(false);
   const [selfPeriod, setSelfPeriod] = useState(selfBooking?.period ?? "day");
-
 
   const formatter = new Intl.ListFormat("fr-FR");
 
@@ -212,8 +248,7 @@ export default function Current() {
   const handleColleagueEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
     const emailStr = event.target.value.trim();
     const isEmailLike = emailStr.includes("@");
-    const profileExists =
-      profiles.some((p) => p.email.startsWith(emailStr));
+    const profileExists = profiles.some((p) => p.email.startsWith(emailStr));
 
     if (isEmailLike && !profileExists) {
       setShowNameInput(true);
@@ -234,7 +269,8 @@ export default function Current() {
 
       {notice && (
         <h3>
-          Note: {notice}. {tempCapacity != null && <>Capacité réduite à {actualMaxCapacity}</>}
+          Note: {notice}.{" "}
+          {tempCapacity != null && <>Capacité réduite à {actualMaxCapacity}</>}
         </h3>
       )}
 
@@ -246,7 +282,7 @@ export default function Current() {
       </p>
 
       <div className="calendar-people">
-        {(['morning', 'day', 'afternoon'] as Period[]).map((period) => {
+        {(["morning", "day", "afternoon"] as Period[]).map((period) => {
           const periodBookings = bookings[period];
           if (periodBookings.length > 0) {
             return (
@@ -254,7 +290,9 @@ export default function Current() {
                 <h3>{periods[period]}</h3>
                 <ul className="calendar-people__list" key={period}>
                   {periodBookings.map((booking) => {
-                    const profile = profiles.find(p => p.id === booking.user_id)!
+                    const profile = profiles.find(
+                      (p) => p.id === booking.user_id,
+                    )!;
 
                     const isDeleteSubmitting =
                       deleteFetcher.state !== "idle" &&
@@ -263,12 +301,12 @@ export default function Current() {
                     const guestsString = formatter.format(
                       Object.entries(booking.guests)
                         .filter((p) => p[1] > 0)
-                        .map((p) => `${p[1]} ${periods[p[0] as Period]}`)
+                        .map((p) => `${p[1]} ${periods[p[0] as Period]}`),
                     );
                     return (
                       <li key={profile.id} aria-busy={isDeleteSubmitting}>
                         <Avatar
-                          className={cx('avatar', {
+                          className={cx("avatar", {
                             "avatar--overflow": isOverflow,
                             "avatar--partial": period != "day",
                           })}
@@ -462,7 +500,6 @@ export default function Current() {
     </>
   );
 }
-
 
 export const handle = {
   breadcrumb: (match: RouteMatch) => <>{match.params.date}</>,
