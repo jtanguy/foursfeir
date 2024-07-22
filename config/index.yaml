@@ -1,0 +1,15 @@
+indexes:
+
+- kind: Notice
+  ancestor: yes
+  properties:
+  - name: date
+  - name: __name__
+- kind: Booking
+  ancestor: yes
+  properties:
+  - name: user_id
+- kind: Booking
+  ancestor: yes
+  properties:
+  - name: date

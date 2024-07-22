@@ -3,20 +3,16 @@ import { Temporal } from "@js-temporal/polyfill";
 import cx from "classnames";
 import { BsPlusCircleDotted } from "react-icons/bs";
 
-import { periods } from "~/constants";
-import type { Database } from "db_types";
 import Avatar from "./Avatar";
 import { Fragment } from "react";
-import { getOccupancy } from "~/bookingUtils";
+import { IndexedBooking, periods, groupBookings, Period, isOverflowBooking } from "~/services/bookings.utils";
+import { Profile } from "~/services/db/profiles.server";
+import { emailToFoursfeirId } from "~/services/profiles.utils";
 
 type Props = {
   date: Temporal.PlainDate;
-  bookings: {
-    date: string;
-    period: keyof typeof periods;
-    profile: Database["public"]["Tables"]["profiles"]["Row"];
-    guests: Record<keyof typeof periods, number>;
-  }[];
+  bookings: (IndexedBooking & { profile: Profile })[];
+  occupancy: number;
   userId: string;
   city: string;
   notice?: string;
@@ -27,6 +23,7 @@ type Props = {
 
 export function CalendarDay({
   date,
+  occupancy,
   bookings,
   userId,
   city,
@@ -36,21 +33,11 @@ export function CalendarDay({
   className,
 }: Props) {
   const fetcher = useFetcher();
-  const sortedBookings = bookings; // Bookings are already sorted by created_at asc
 
-  const self = sortedBookings.find((p) => p.profile.id === userId);
+  const self = bookings.find((p) => emailToFoursfeirId(p.profile?.email) === userId);
   const hasBooking = self != null;
 
-  const byPeriod = sortedBookings.reduce(
-    (acc, booking, index) => ({
-      ...acc,
-      [booking.period]: [
-        ...acc[booking.period],
-        { index: index + 1, ...booking },
-      ],
-    }),
-    { day: [], morning: [], afternoon: [] }
-  );
+  const byPeriod = groupBookings(bookings)
 
   const today = Temporal.Now.plainDateISO();
   const isToday = Temporal.PlainDate.compare(date, today) === 0;
@@ -60,7 +47,6 @@ export function CalendarDay({
 
   const selfFormId = `${date.toString()}-self`;
 
-  const occupancy = getOccupancy(bookings);
 
   const isVisuallyFull = occupancy >= capacity;
   const isFull = occupancy >= maxCapacity;
@@ -87,13 +73,14 @@ export function CalendarDay({
         {notice && <> &mdash; {notice}</>}
       </h2>
       {"   "}
-      {fetcher.state === "idle" && fetcher.data?.error && (
+      {/* {fetcher.state === "idle" && fetcher.data?.error && (
         <span className="error">{fetcher.data?.message}</span>
-      )}
+      )} */}
       <>
         <div>
           {isFuture && (
             <fetcher.Form method="post" id={selfFormId}>
+              {self && (<input type="hidden" name="booking_id" value={self.booking_id} />)}
               <input type="hidden" name="date" value={date.toString()} />
               <input
                 type="hidden"
@@ -105,15 +92,14 @@ export function CalendarDay({
           <details className="calendar-people">
             <summary className="calendar-people__header">
               <ul className="calendar-people__list calendar-people__list--inline">
-                {sortedBookings.map((booking, index) => {
-                  const isOverflow = index + 1 >= capacity;
+                {bookings.map((booking) => {
+                  const isOverflow = isOverflowBooking(booking, capacity)
                   const overflowStr = isOverflow ? " (Surnuméraire)" : "";
                   return (
                     <li
                       key={booking.profile?.id}
-                      data-tooltip={`${
-                        booking.profile?.full_name ?? booking.profile.email
-                      } - ${periods[booking.period]}${overflowStr}`}
+                      data-tooltip={`${booking.profile?.full_name ?? booking.profile?.email
+                        } - ${periods[booking.period]}${overflowStr}`}
                     >
                       <Avatar
                         className={cx({
@@ -140,33 +126,34 @@ export function CalendarDay({
                 )}
               </ul>
             </summary>
-            {Object.keys(periods).map((period) => {
-              const bookings = byPeriod[period];
+            {Object.entries(periods).map(([period, label]) => {
+              const bookings = byPeriod[period as Period];
               if (bookings.length > 0) {
                 return (
                   <Fragment key={period}>
-                    <h3>{periods[period]}</h3>
+                    <h3>{label}</h3>
                     <ul
                       className="calendar-people__list calendar-people--expanded"
                       key={period}
                     >
-                      {bookings.map(({ index, profile, guests }) => {
-                        const isOverflow = index >= capacity;
+                      {bookings.map((booking) => {
+                        const isOverflow = isOverflowBooking(booking, capacity)
                         const guestsString = formatter.format(
-                          Object.entries(guests)
+                          Object.entries(booking.guests)
                             .filter((p) => p[1] > 0)
-                            .map((p) => `${p[1]} ${periods[p[0]]}`)
+                            .map((p) => `${p[1]} ${periods[p[0] as Period]}`)
                         );
+                        const { profile } = booking
                         return (
-                          <li key={profile.id}>
+                          <li key={profile?.id}>
                             <Avatar
                               className={cx({
                                 "avatar--partial": period !== "day",
                                 "avatar--overflow": isOverflow,
                               })}
-                              profile={profile}
+                              profile={booking.profile}
                             />
-                            <span>{profile?.full_name ?? profile.email}</span>
+                            <span>{profile?.full_name ?? profile?.email}</span>
                             {guestsString && ` (+${guestsString})`}
                             {isOverflow && ` (Surnuméraire)`}
                           </li>
@@ -177,8 +164,8 @@ export function CalendarDay({
                 );
               }
             })}
-            {isFuture && (
-              <div className="calendar-day__actions">
+            <div className="calendar-day__actions">
+              {isFuture && (
                 <div>
                   {hasBooking ? (
                     <button
@@ -189,11 +176,11 @@ export function CalendarDay({
                       Se désinscrire
                     </button>
                   ) : (
-                    <details role="list" className="calendar-people__book-self">
-                      <summary aria-haspopup="listbox" role="button">
-                        S'inscrire
+                    <details className="dropdown">
+                      <summary role="button">
+                        S&apos;inscrire
                       </summary>
-                      <ul role="listbox">
+                      <ul>
                         <li>
                           <button
                             type="submit"
@@ -234,9 +221,9 @@ export function CalendarDay({
                     </details>
                   )}
                 </div>
-                <Link to={`/${city}/${date.toString()}`}>Détails</Link>
-              </div>
-            )}
+              )}
+              <Link to={`/${city}/${date.toString()}`}>Détails</Link>
+            </div>
           </details>
         </div>
       </>

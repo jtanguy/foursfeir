@@ -1,9 +1,9 @@
 import cx from "classnames";
 
-import type { Database } from "db_types";
+import { Profile } from "~/services/db/profiles.server";
 
 type Props = {
-  profile: Database["public"]["Tables"]["profiles"]["Row"];
+  profile: Profile
   className?: string;
 };
 export default function Avatar({ profile, className }: Props) {

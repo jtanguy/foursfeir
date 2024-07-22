@@ -1,66 +1,64 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { redirect, json } from "@remix-run/node";
-import { useLoaderData, useParams } from "@remix-run/react";
+import { json } from "@remix-run/node";
+import { useLoaderData, useParams} from "@remix-run/react";
 import cx from "classnames";
-import { createServerClient } from "utils/supabase.server";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
-
 import { CalendarDay } from "~/components/CalendarDay";
 
-const SATURDAY = 6;
+import { authenticator, getUserFromRequest } from "~/services/auth.server";
+import { createBooking, deleteBooking, getBookingsFor, getOccupancy } from "~/services/db/bookings.server";
+import { IndexedBooking, getAllDatesFromPeriod, getRequestPeriod } from "~/services/bookings.utils";
+import { getCity, isNotice, noticeLoader } from "~/services/db/cities.server";
+import { Profile, profileLoader, saveProfile } from "~/services/db/profiles.server";
+import invariant from "~/services/validation.utils.server";
+import { emailToFoursfeirId } from "~/services/profiles.utils";
 
-export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const response = new Response();
-  const supabase = createServerClient({ request, response });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export const loader = async ({ params, request }: LoaderFunctionArgs) => {
+  invariant(params.city, 'No city given')
+  const user = await getUserFromRequest(request)
+  const city = await getCity(params.city)
 
-  const today = Temporal.Now.plainDateISO();
-  let start = today.subtract({ days: today.dayOfWeek - 1 });
+  const search = new URL(request.url).searchParams
+  const [start, end] = getRequestPeriod(search.get("from") != null ? Temporal.PlainDate.from(search.get("from")!) : Temporal.Now.plainDateISO(), Number(search.get('weeks') ?? 2))
+  
+  const days = getAllDatesFromPeriod([start, end])
+  const daysWithCity: [string, string][] = days.map(d => [city.slug, d])
+  const [periodBookings, notices] = await Promise.all([getBookingsFor(city.slug, [start.toString(), end.toString()]), noticeLoader.loadMany(daysWithCity)])
 
-  if (today.dayOfWeek >= SATURDAY) {
-    start = start.add({ weeks: 1 });
-  }
-  const end = start.add({ days: today.daysInWeek * 2 });
+  const bookingsDailies = [...periodBookings.reduce((previous, booking) => {
+    previous.set(booking.date, (previous.get(booking.date) ?? []).concat({index: (previous.get(booking.date)?.length ?? 0) + 1, ...booking}))
+    return previous
+  }, new Map()).values()]
+  
+  const occupancies = days.map((day) => 
+    getOccupancy(
+      bookingsDailies.flat().filter((({date}) => date === day))
+    ) 
+  )
 
-  const [{ data: bookings }, { data: notices }, { data: cities }] =
-    await Promise.all([
-      supabase
-        .from("bookings")
-        .select(
-          "date, period, profile:user_id(id, email, full_name, avatar_url), guests"
-        )
-        .eq("city", params.city)
-        .gte("date", start.toString())
-        .lte("date", end.toString())
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("notices")
-        .select("date, message, temp_capacity")
-        .eq("city", params.city)
-        .gte("date", start.toString())
-        .lte("date", end.toString()),
-      supabase
-        .from("cities")
-        .select("capacity, max_capacity")
-        .eq("slug", params.city),
-    ]);
+  const sortedByDayWithProfile: (IndexedBooking & { profile: Profile })[] = await Promise.all(
+    bookingsDailies.flat().map(async booking => {
+      const profile = await profileLoader.load(booking.user_id)
+      return ({ ...booking, profile: profile! })
+    })
+  )
 
   return json({
-    bookings: bookings ?? [],
-    capacity: cities![0].capacity,
-    maxCapacity: cities![0].max_capacity,
-    notices: notices ?? [],
-    user,
+    days,
+    occupancies,
+    bookings: sortedByDayWithProfile ?? [],
+    capacity: city.capacity,
+    maxCapacity: city.max_capacity,
+    notices: notices.filter(isNotice) ?? [],
+    user
   });
 };
 
 const schema = zfd.formData(
-  z.discriminatedUnion("_action", [
+  z.union([
     z.object({
       _action: z.literal("book"),
       date: zfd.text(),
@@ -68,68 +66,64 @@ const schema = zfd.formData(
     }),
     z.object({
       _action: z.literal("remove"),
+      booking_id: zfd.text(),
       date: zfd.text(),
     }),
   ])
 );
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  if (!params.city) throw new Response("No city given", { status: 400 });
-  const response = new Response();
-  const supabase = createServerClient({ request, response });
+  invariant(params.city, "No city given")
 
-  const f = schema.parse(await request.formData());
+  const form = await request.formData()
+  const f = schema.parse(form);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) throw redirect("/login");
+  const user = await authenticator.isAuthenticated(request, { failureRedirect: "/login" })
 
   if (f._action === "book") {
-    await supabase
-      .from("bookings")
-      .insert([
-        { city: params.city, date: f.date, user_id: user.id, period: f.period },
-      ]);
+    await saveProfile({
+      email: user.email,
+      full_name: user.full_name,
+      avatar_url: user.avatar_url
+    })
+
+    await createBooking({
+      city: params.city,
+      user_id: emailToFoursfeirId(user.email),
+      date: f.date,
+      guests: {},
+      period: f.period,
+      booked_by: null,
+      created_at: new Date().toISOString(),
+    })
+
     return new Response(null, { status: 201 });
   } else {
-    await supabase.from("bookings").delete().match({
-      user_id: user.id,
-      city: params.city,
+    await deleteBooking({
+      booking_id: f.booking_id,
       date: f.date,
-    });
+      city: params.city,
+    })
     return new Response(null, { status: 202 });
   }
 };
 
 export default function Current() {
   const { city } = useParams();
-  const { bookings, notices, capacity, maxCapacity, user } =
-    useLoaderData<typeof loader>();
-
-  const today = Temporal.Now.plainDateISO();
-  let startOfWeek = today.subtract({ days: today.dayOfWeek - 1 });
-
-  if (today.dayOfWeek >= SATURDAY) {
-    startOfWeek = startOfWeek.add({ weeks: 1 });
-  }
-
-  const days = Array.from({ length: today.daysInWeek * 2 }, (_, i) => i)
-    .map((n) => startOfWeek.add({ days: n }))
-    .filter((d) => d.dayOfWeek < SATURDAY);
+  const { days, occupancies, bookings, notices, capacity, maxCapacity, user } = useLoaderData<typeof loader>();
 
   return (
     <>
-      {days.map((day) => {
-        const key = day.toString();
-        const dayBookings = bookings.filter(({ date }) => date === key);
-        const notice = notices.find((n) => n.date === key);
+      {days.map((day, i) => {
+        const dayBookings = bookings.filter(({ date }) => date === day);
+        const notice = notices.find((n) => n.date === day);
+        const date = Temporal.PlainDate.from(day)
         return (
           <CalendarDay
-            key={day.toString()}
-            className={cx({ "calendar-day--end-of-week": day.dayOfWeek === 5 })}
-            date={day}
+            key={day}
+            occupancy={occupancies[i]}
+            className={cx({ "calendar-day--end-of-week": date.dayOfWeek === 5 })}
+            date={date}
             notice={notice?.message}
             bookings={dayBookings}
             userId={user!.id}

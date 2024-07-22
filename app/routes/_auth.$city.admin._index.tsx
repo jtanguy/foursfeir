@@ -1,48 +1,33 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 import { FiPlus, FiTrash } from "react-icons/fi";
-import { json } from "react-router";
-import { createServerClient } from "utils/supabase.server";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { getUserFromRequest } from "~/services/auth.server";
+import { findIsAdmin } from "~/services/db/admins.server";
+import { createNotice, deleteNotice, getAllNotices, getCity } from "~/services/db/cities.server";
+import invariant from "~/services/validation.utils.server";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const response = new Response();
-
-  const supabase = createServerClient({ request, response });
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (user == null) {
-    return redirect(`/${params.city}`);
-  }
-
-  const { data: isAdmin } = await supabase.rpc("is_admin", {
-    user_id: user.id,
-    city: params.city!,
-  });
+  invariant(params.city, 'No city given')
+  const user = await getUserFromRequest(request)
+  const isAdmin = await findIsAdmin(user.id, params.city)
 
   if (!isAdmin) {
-    return redirect(`/${params.city}`);
+    throw redirect(`/${params.city}`);
   }
 
   const today = Temporal.Now.plainDateISO();
   const start = today.subtract({ weeks: 1, days: today.dayOfWeek - 1 });
 
-  const { data: notices } = await supabase
-    .from("notices")
-    .select("message, date, temp_capacity")
-    .eq("city", params.city)
-    .gte("date", start.toString());
-  const { data: city } = await supabase
-    .from("cities")
-    .select("capacity, max_capacity")
-    .eq("slug", params.city);
-  return json({ notices: notices ?? [], city: city[0] });
+  const [notices, city] = await Promise.all([getAllNotices(params.city, start.toString()), getCity(params.city)])
+
+  return json({
+    notices: notices ?? [],
+    city: city
+  });
 };
 
 const schema = zfd.formData(
@@ -51,7 +36,7 @@ const schema = zfd.formData(
       _action: z.literal("create"),
       date: zfd.text(),
       message: zfd.text(),
-      temp_capacity: zfd.numeric().optional(),
+      temp_capacity: zfd.numeric(z.number().optional()),
     }),
     z.object({
       _action: z.literal("delete"),
@@ -59,34 +44,17 @@ const schema = zfd.formData(
     }),
   ])
 );
+
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   if (!params.city) throw new Response("No city given", { status: 400 });
-  const response = new Response();
-  const supabase = createServerClient({ request, response });
 
   const f = schema.parse(await request.formData());
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) throw redirect("/login");
-
   if (f._action === "create") {
-    await supabase.from("notices").insert([
-      {
-        city: params.city,
-        date: f.date,
-        message: f.message,
-        temp_capacity: f.temp_capacity,
-      },
-    ]);
+    await createNotice({ city: params.city, date: f.date, message: f.message, temp_capacity: f.temp_capacity, created_at: new Date().toISOString() })
     return new Response(null, { status: 201 });
   } else {
-    await supabase.from("notices").delete().match({
-      city: params.city,
-      date: f.date,
-    });
+    await deleteNotice({ city: params.city, date: f.date })
     return new Response(null, { status: 202 });
   }
 };
@@ -102,7 +70,7 @@ export default function CityAdmin() {
           <tr>
             <th scope="col">Date</th>
             <th scope="col">Message</th>
-            <th scope="col">Capacité</th>
+            <th scope="col">Capacité (par défaut {city.capacity})</th>
             <th scope="col"></th>
           </tr>
         </thead>
@@ -112,14 +80,13 @@ export default function CityAdmin() {
               <th scope="row">{notice.date}</th>
               <td>{notice.message}</td>
               <td>
-                {notice.temp_capacity}/{city.max_capacity}
+                {notice.temp_capacity != null ? <>{notice.temp_capacity}/{city.max_capacity} (limite dure)</> : <>{city.capacity} (flexible, par défaut)</>}
               </td>
               <td>
                 <Form method="post" className="admin-form">
                   <input type="hidden" name="date" value={notice.date} />
                   <button
                     className="inline-button icon"
-                    role="button"
                     name="_action"
                     value="delete"
                   >
@@ -145,14 +112,12 @@ export default function CityAdmin() {
                 name="temp_capacity"
                 min="0"
                 max={city.max_capacity}
-                defaultValue={city.capacity}
               />
             </th>
             <th scope="col">
               <Form method="post" id="create-notice">
                 <button
                   className="inline-button icon"
-                  role="button"
                   name="_action"
                   value="create"
                 >
