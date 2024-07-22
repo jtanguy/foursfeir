@@ -3,7 +3,7 @@ import { Outlet } from "@remix-run/react";
 import { getUserFromRequest } from "~/services/auth.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await getUserFromRequest(request)
+  await getUserFromRequest(request);
   return null;
 };
 

@@ -5,7 +5,13 @@ import { BsPlusCircleDotted } from "react-icons/bs";
 
 import Avatar from "./Avatar";
 import { Fragment } from "react";
-import { IndexedBooking, periods, groupBookings, Period, isOverflowBooking } from "~/services/bookings.utils";
+import {
+  IndexedBooking,
+  periods,
+  groupBookings,
+  Period,
+  isOverflowBooking,
+} from "~/services/bookings.utils";
 import { Profile } from "~/services/db/profiles.server";
 import { emailToFoursfeirId } from "~/services/profiles.utils";
 
@@ -34,10 +40,12 @@ export function CalendarDay({
 }: Props) {
   const fetcher = useFetcher();
 
-  const self = bookings.find((p) => emailToFoursfeirId(p.profile?.email) === userId);
+  const self = bookings.find(
+    (p) => emailToFoursfeirId(p.profile?.email) === userId,
+  );
   const hasBooking = self != null;
 
-  const byPeriod = groupBookings(bookings)
+  const byPeriod = groupBookings(bookings);
 
   const today = Temporal.Now.plainDateISO();
   const isToday = Temporal.PlainDate.compare(date, today) === 0;
@@ -46,7 +54,6 @@ export function CalendarDay({
   const isSubmitting = fetcher.state !== "idle";
 
   const selfFormId = `${date.toString()}-self`;
-
 
   const isVisuallyFull = occupancy >= capacity;
   const isFull = occupancy >= maxCapacity;
@@ -61,7 +68,7 @@ export function CalendarDay({
           "calendar-day--full": isVisuallyFull,
           "calendar-day--today": isToday,
         },
-        className
+        className,
       )}
       aria-busy={isSubmitting}
     >
@@ -80,7 +87,13 @@ export function CalendarDay({
         <div>
           {isFuture && (
             <fetcher.Form method="post" id={selfFormId}>
-              {self && (<input type="hidden" name="booking_id" value={self.booking_id} />)}
+              {self && (
+                <input
+                  type="hidden"
+                  name="booking_id"
+                  value={self.booking_id}
+                />
+              )}
               <input type="hidden" name="date" value={date.toString()} />
               <input
                 type="hidden"
@@ -93,13 +106,14 @@ export function CalendarDay({
             <summary className="calendar-people__header">
               <ul className="calendar-people__list calendar-people__list--inline">
                 {bookings.map((booking) => {
-                  const isOverflow = isOverflowBooking(booking, capacity)
+                  const isOverflow = isOverflowBooking(booking, capacity);
                   const overflowStr = isOverflow ? " (Surnuméraire)" : "";
                   return (
                     <li
                       key={booking.profile?.id}
-                      data-tooltip={`${booking.profile?.full_name ?? booking.profile?.email
-                        } - ${periods[booking.period]}${overflowStr}`}
+                      data-tooltip={`${
+                        booking.profile?.full_name ?? booking.profile?.email
+                      } - ${periods[booking.period]}${overflowStr}`}
                     >
                       <Avatar
                         className={cx({
@@ -137,13 +151,13 @@ export function CalendarDay({
                       key={period}
                     >
                       {bookings.map((booking) => {
-                        const isOverflow = isOverflowBooking(booking, capacity)
+                        const isOverflow = isOverflowBooking(booking, capacity);
                         const guestsString = formatter.format(
                           Object.entries(booking.guests)
                             .filter((p) => p[1] > 0)
-                            .map((p) => `${p[1]} ${periods[p[0] as Period]}`)
+                            .map((p) => `${p[1]} ${periods[p[0] as Period]}`),
                         );
-                        const { profile } = booking
+                        const { profile } = booking;
                         return (
                           <li key={profile?.id}>
                             <Avatar
@@ -177,9 +191,7 @@ export function CalendarDay({
                     </button>
                   ) : (
                     <details className="dropdown">
-                      <summary role="button">
-                        S&apos;inscrire
-                      </summary>
+                      <summary role="button">S&apos;inscrire</summary>
                       <ul>
                         <li>
                           <button
