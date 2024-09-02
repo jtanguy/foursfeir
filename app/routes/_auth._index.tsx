@@ -5,8 +5,8 @@ import { getUserFromRequest } from "~/services/auth.server";
 import { getCities } from "~/services/db/cities.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await getUserFromRequest(request)
-  const cities = await getCities()
+  await getUserFromRequest(request);
+  const cities = await getCities();
 
   return json({
     cities: cities ?? [],
