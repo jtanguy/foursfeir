@@ -87,9 +87,19 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       avatar_url: user.avatar_url
     })
 
+    /*  delete all previous bookings to avoid to create a doublon booking
+        It is temporary fix other possibility use the user_id to identify the booking_id and overwrite the previous booking
+    */
+    const user_id = emailToFoursfeirId(user.email);
+    const previousBookings = await getBookingsFor(params.city, f.date, user_id)
+
+    if(previousBookings.length > 0) {
+      await Promise.all(previousBookings.map(({booking_id, city, date}) => deleteBooking({booking_id, city, date})))
+    }
+
     await createBooking({
       city: params.city,
-      user_id: emailToFoursfeirId(user.email),
+      user_id,
       date: f.date,
       guests: {},
       period: f.period,
