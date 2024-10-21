@@ -77,7 +77,7 @@ export default function CityAdmin() {
         <tbody>
           {notices.map((notice) => (
             <tr key={notice.date}>
-              <th scope="row"><Link to={`/${params.city}/${notice.date}`}>{notice.date}</Link></th>
+              <th scope="row"><Link to={`/${city.slug}/${notice.date}`}>{notice.date}</Link></th>
               <td>{notice.message}</td>
               <td>
                 {notice.temp_capacity != null ? <>{notice.temp_capacity}/{city.max_capacity} (limite dure)</> : <>{city.capacity} (flexible, par défaut)</>}
