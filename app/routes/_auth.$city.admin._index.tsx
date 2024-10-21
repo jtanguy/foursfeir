@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useLoaderData } from "@remix-run/react";
+import { Link, Form, useLoaderData } from "@remix-run/react";
 import { FiPlus, FiTrash } from "react-icons/fi";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -77,7 +77,7 @@ export default function CityAdmin() {
         <tbody>
           {notices.map((notice) => (
             <tr key={notice.date}>
-              <th scope="row">{notice.date}</th>
+              <th scope="row"><Link to={`/${city}/${notice.date}`}>{notice.date}</Link></th>
               <td>{notice.message}</td>
               <td>
                 {notice.temp_capacity != null ? <>{notice.temp_capacity}/{city.max_capacity} (limite dure)</> : <>{city.capacity} (flexible, par défaut)</>}
