@@ -13,7 +13,7 @@ const googleStrategy = new GoogleStrategy<Profile>(
   {
     clientID: process.env.GOOGLE_AUTH_ID!,
     clientSecret: process.env.GOOGLE_AUTH_SECRET!,
-    callbackURL: process.env.GOOGLE_AUTH_CALLBACK_URL!,
+    callbackURL: process.env.GOOGLE_AUTH_CALLBACK_URL ?? `https://${process.env.VERCEL_URL}/auth`,
   },
   async ({ profile }) => {
     // Get the user data from your DB or API using the tokens and profile
