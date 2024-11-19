@@ -7,13 +7,18 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { getUserFromRequest } from "~/services/auth.server";
 import { findIsAdmin } from "~/services/db/admins.server";
-import { createNotice, deleteNotice, getAllNotices, getCity } from "~/services/db/cities.server";
+import {
+  createNotice,
+  deleteNotice,
+  getAllNotices,
+  getCity,
+} from "~/services/db/cities.server";
 import invariant from "~/services/validation.utils.server";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  invariant(params.city, 'No city given')
-  const user = await getUserFromRequest(request)
-  const isAdmin = await findIsAdmin(user.id, params.city)
+  invariant(params.city, "No city given");
+  const user = await getUserFromRequest(request);
+  const isAdmin = await findIsAdmin(user.id, params.city);
 
   if (!isAdmin) {
     throw redirect(`/${params.city}`);
@@ -22,11 +27,14 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const today = Temporal.Now.plainDateISO();
   const start = today.subtract({ weeks: 1, days: today.dayOfWeek - 1 });
 
-  const [notices, city] = await Promise.all([getAllNotices(params.city, start.toString()), getCity(params.city)])
+  const [notices, city] = await Promise.all([
+    getAllNotices(params.city, start.toString()),
+    getCity(params.city),
+  ]);
 
   return json({
     notices: notices ?? [],
-    city: city
+    city: city,
   });
 };
 
@@ -42,7 +50,7 @@ const schema = zfd.formData(
       _action: z.literal("delete"),
       date: zfd.text(),
     }),
-  ])
+  ]),
 );
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
@@ -51,10 +59,16 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   const f = schema.parse(await request.formData());
 
   if (f._action === "create") {
-    await createNotice({ city: params.city, date: f.date, message: f.message, temp_capacity: f.temp_capacity, created_at: new Date().toISOString() })
+    await createNotice({
+      city: params.city,
+      date: f.date,
+      message: f.message,
+      temp_capacity: f.temp_capacity,
+      created_at: new Date().toISOString(),
+    });
     return new Response(null, { status: 201 });
   } else {
-    await deleteNotice({ city: params.city, date: f.date })
+    await deleteNotice({ city: params.city, date: f.date });
     return new Response(null, { status: 202 });
   }
 };
@@ -80,7 +94,13 @@ export default function CityAdmin() {
               <th scope="row"><Link to={`/${city.slug}/${notice.date}`}>{notice.date}</Link></th>
               <td>{notice.message}</td>
               <td>
-                {notice.temp_capacity != null ? <>{notice.temp_capacity}/{city.max_capacity} (limite dure)</> : <>{city.capacity} (flexible, par défaut)</>}
+                {notice.temp_capacity != null ? (
+                  <>
+                    {notice.temp_capacity}/{city.max_capacity} (limite dure)
+                  </>
+                ) : (
+                  <>{city.capacity} (flexible, par défaut)</>
+                )}
               </td>
               <td>
                 <Form method="post" className="admin-form">

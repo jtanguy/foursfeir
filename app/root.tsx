@@ -35,20 +35,26 @@ export const links: LinksFunction = () => [
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await authenticator.isAuthenticated(request);
 
-  let cities: { slug: string, label: string }[] = []
+  let cities: { slug: string; label: string }[] = [];
   if (user) {
-    const [admin, allCities] = await Promise.all([getAdmin(user.id), getCities()])
-    cities = admin.flatMap(({ city }) => allCities.filter(c => c.slug === city).map(c => ({ slug: c.slug, label: c.label })))
+    const [admin, allCities] = await Promise.all([
+      getAdmin(user.id),
+      getCities(),
+    ]);
+    cities = admin.flatMap(({ city }) =>
+      allCities
+        .filter((c) => c.slug === city)
+        .map((c) => ({ slug: c.slug, label: c.label })),
+    );
   }
 
-  return json({ user, cities })
+  return json({ user, cities });
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { user, cities } = useLoaderData<typeof loader>()
+  const { user, cities } = useLoaderData<typeof loader>();
 
   const matches = useMatches();
-
 
   return (
     <html lang="en">
@@ -85,20 +91,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     src={user.avatar_url}
                     alt=""
                   />
-                  <span className="header-user__name">
-                    {user.full_name}
-                  </span>
+                  <span className="header-user__name">{user.full_name}</span>
                 </summary>
                 <ul>
                   {cities?.map(({ slug, label }) => (
                     <li key={slug}>
-                      <Link to={`/${slug}/admin`}>
-                        {label} admin
-                      </Link>
+                      <Link to={`/${slug}/admin`}>{label} admin</Link>
                     </li>
                   ))}
                   <li>
-                    <Form id="logout-form" action='/logout' method='post'>
+                    <Form id="logout-form" action="/logout" method="post">
                       <button className="icon">
                         Déconnexion <FiLogOut aria-label="Logout" />
                       </button>
@@ -110,7 +112,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <ul>
                 <li>
                   <Link to="/login">Login</Link>
-                </li></ul>
+                </li>
+              </ul>
             )}
           </nav>
           {children}
@@ -128,7 +131,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <ScrollRestoration />
         <Scripts />
       </body>
-    </html >
+    </html>
   );
 }
 

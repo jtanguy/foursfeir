@@ -7,7 +7,6 @@ const SIZE = 96;
 const VARIANT = "bauhaus";
 const COLORS = ["#1a2a3a", "#e4426d", "#1d1d2b", "#769cec", "#586f8f"];
 
-
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
 
@@ -16,10 +15,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Fixing the UMD export of boring-avatars
   // See https://github.com/boringdesigners/boring-avatars/issues/76
-  const RealBoring = typeof (Boring as any).default !== "undefined" ? (Boring as any).default : Boring;
+  const RealBoring =
+    typeof (Boring as any).default !== "undefined"
+      ? (Boring as any).default
+      : Boring;
 
   const svg = renderToString(
-    <RealBoring size={SIZE} name={name} variant={VARIANT} colors={COLORS} square={false} />
+    <RealBoring
+      size={SIZE}
+      name={name}
+      variant={VARIANT}
+      colors={COLORS}
+      square={false}
+    />,
   );
 
   return new Response(svg, {
