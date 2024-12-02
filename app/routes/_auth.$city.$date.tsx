@@ -163,7 +163,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       period: f.period,
       booked_by: null,
       guests: f.guests ?? {},
-      created_at: previousBookings?.[0].created_at ?? new Date().toISOString()
+      created_at: previousBookings?.[0]?.created_at ?? new Date().toISOString()
     })
     return new Response(null, { status: 202 });
   }
