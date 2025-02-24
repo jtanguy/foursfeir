@@ -3,6 +3,7 @@ import { GoogleStrategy } from "remix-auth-google";
 import { sessionStorage } from "~/services/session.server";
 import { Profile } from "./db/profiles.server";
 import { emailToFoursfeirId } from "./profiles.utils";
+import { env } from "config";
 
 // Create an instance of the authenticator, pass a generic with what
 // strategies will return and will store in the session
@@ -10,9 +11,9 @@ const authenticator = new Authenticator<Profile>(sessionStorage);
 
 const googleStrategy = new GoogleStrategy<Profile>(
   {
-    clientID: process.env.GOOGLE_AUTH_ID!,
-    clientSecret: process.env.GOOGLE_AUTH_SECRET!,
-    callbackURL: process.env.GOOGLE_AUTH_CALLBACK_URL!,
+    clientID: env.GOOGLE_AUTH_ID,
+    clientSecret: env.GOOGLE_AUTH_SECRET,
+    callbackURL: env.GOOGLE_AUTH_CALLBACK_URL,
   },
   async ({ profile }) => {
     // Get the user data from your DB or API using the tokens and profile
