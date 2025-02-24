@@ -33,26 +33,26 @@ export function getOccupancy(bookings: Booking[]): number {
 }
 
 export function withIndex(booking: Booking, index: number) {
-  return {...booking, index: index + 1}
+  return { ...booking, index: index + 1 }
 }
 
 export async function getBookingsFor(citySlug: string, date: string | [string, string], userId?: string): Promise<Booking[]> {
   let ancestorKey
-  if(Array.isArray(date)) {
+  if (Array.isArray(date)) {
     ancestorKey = client.key([KINDS.city, citySlug]);
   } else {
     ancestorKey = client.key([KINDS.city, citySlug, KINDS.date, date]);
   }
-  
+
   const query = client.createQuery(KINDS.booking).hasAncestor(ancestorKey);
 
-  if(userId) {
+  if (userId) {
     query.filter('user_id', userId)
   }
 
-  if(!userId && Array.isArray(date)) {
+  if (!userId && Array.isArray(date)) {
     query.filter(
-       and([
+      and([
         new PropertyFilter('date', '>=', date[0]),
         new PropertyFilter('date', '<=', date[1])
       ])

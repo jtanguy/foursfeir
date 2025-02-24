@@ -1,5 +1,5 @@
 export default function invariant(
-  condition: any,
+  condition: unknown,
   // Not providing an inline default argument for message as the result is smaller
   /**
    * Can provide a string, or a function that returns a string for cases where

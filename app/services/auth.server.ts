@@ -1,6 +1,5 @@
 import { Authenticator } from "remix-auth";
 import { GoogleStrategy } from "remix-auth-google";
-import { FormStrategy } from "remix-auth-form"
 import { sessionStorage } from "~/services/session.server";
 import { Profile } from "./db/profiles.server";
 import { emailToFoursfeirId } from "./profiles.utils";

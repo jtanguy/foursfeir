@@ -1,7 +1,6 @@
-import { Temporal } from "@js-temporal/polyfill";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useLoaderData, useParams} from "@remix-run/react";
+import { useLoaderData, useParams } from "@remix-run/react";
 import cx from "classnames";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -14,6 +13,7 @@ import { getCity, isNotice, noticeLoader } from "~/services/db/cities.server";
 import { Profile, profileLoader, saveProfile } from "~/services/db/profiles.server";
 import invariant from "~/services/validation.utils.server";
 import { emailToFoursfeirId } from "~/services/profiles.utils";
+import { Temporal } from "temporal-polyfill";
 
 
 export const loader = async ({ params, request }: LoaderFunctionArgs) => {
@@ -23,20 +23,20 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
 
   const search = new URL(request.url).searchParams
   const [start, end] = getRequestPeriod(search.get("from") != null ? Temporal.PlainDate.from(search.get("from")!) : Temporal.Now.plainDateISO(), Number(search.get('weeks') ?? 2))
-  
+
   const days = getAllDatesFromPeriod([start, end])
   const daysWithCity: [string, string][] = days.map(d => [city.slug, d])
   const [periodBookings, notices] = await Promise.all([getBookingsFor(city.slug, [start.toString(), end.toString()]), noticeLoader.loadMany(daysWithCity)])
 
   const bookingsDailies = [...periodBookings.reduce((previous, booking) => {
-    previous.set(booking.date, (previous.get(booking.date) ?? []).concat({index: (previous.get(booking.date)?.length ?? 0) + 1, ...booking}))
+    previous.set(booking.date, (previous.get(booking.date) ?? []).concat({ index: (previous.get(booking.date)?.length ?? 0) + 1, ...booking }))
     return previous
   }, new Map()).values()]
-  
-  const occupancies = days.map((day) => 
+
+  const occupancies = days.map((day) =>
     getOccupancy(
-      bookingsDailies.flat().filter((({date}) => date === day))
-    ) 
+      bookingsDailies.flat().filter((({ date }) => date === day))
+    )
   )
 
   const sortedByDayWithProfile: (IndexedBooking & { profile: Profile })[] = await Promise.all(
@@ -81,7 +81,9 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   const user = await authenticator.isAuthenticated(request, { failureRedirect: "/login" })
 
   if (f._action === "book") {
+    const user_id = emailToFoursfeirId(user.email);
     await saveProfile({
+      id: user_id,
       email: user.email,
       full_name: user.full_name,
       avatar_url: user.avatar_url
@@ -90,11 +92,10 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     /*  delete all previous bookings to avoid to create a doublon booking
         It is temporary fix other possibility use the user_id to identify the booking_id and overwrite the previous booking
     */
-    const user_id = emailToFoursfeirId(user.email);
     const previousBookings = await getBookingsFor(params.city, f.date, user_id)
 
-    if(previousBookings.length > 0) {
-      await Promise.all(previousBookings.map(({booking_id, city, date}) => deleteBooking({booking_id, city, date})))
+    if (previousBookings.length > 0) {
+      await Promise.all(previousBookings.map(({ booking_id, city, date }) => deleteBooking({ booking_id, city, date })))
     }
 
     await createBooking({

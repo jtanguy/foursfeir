@@ -1,5 +1,5 @@
 import { Link, useFetcher } from "@remix-run/react";
-import { Temporal } from "@js-temporal/polyfill";
+import { Temporal } from "temporal-polyfill";
 import cx from "classnames";
 import { BsPlusCircleDotted } from "react-icons/bs";
 

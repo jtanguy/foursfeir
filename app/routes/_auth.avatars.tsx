@@ -16,6 +16,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Fixing the UMD export of boring-avatars
   // See https://github.com/boringdesigners/boring-avatars/issues/76
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const RealBoring = typeof (Boring as any).default !== "undefined" ? (Boring as any).default : Boring;
 
   const svg = renderToString(

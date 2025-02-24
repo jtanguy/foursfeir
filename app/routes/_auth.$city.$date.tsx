@@ -1,5 +1,4 @@
 import { ChangeEvent, Fragment, useState } from "react";
-import { Temporal } from "@js-temporal/polyfill";
 import type {
   ActionFunctionArgs,
   LinksFunction,
@@ -27,9 +26,10 @@ import { findIsAdmin } from "~/services/db/admins.server";
 import { getCity, getNoticeFor } from "~/services/db/cities.server";
 import { createBooking, deleteBooking, getBookingsFor, getOccupancy, withIndex } from "~/services/db/bookings.server";
 import { Period, isOverflowBooking, periods, groupBookings } from "~/services/bookings.utils";
-import { getProfiles, isProfile, profileLoader, saveProfile } from "~/services/db/profiles.server";
+import { isProfile, profileLoader, saveProfile } from "~/services/db/profiles.server";
 import invariant from "~/services/validation.utils.server";
 import { emailToFoursfeirId } from "~/services/profiles.utils";
+import { Temporal } from "temporal-polyfill";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   invariant(params.city, "No city given")
@@ -113,6 +113,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         profileLoader.clear(otherId)
         // Create profile on the fly
         await saveProfile({
+          id: otherId,
           email: f.for_user,
           full_name: f.for_user_name ?? f.for_user,
         })
@@ -151,6 +152,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       profileLoader.clear(user.id)
       // we could remove this because the profile is created when the user logged
       await saveProfile({
+        id: user.id,
         email: user.email,
         full_name: user.full_name,
         avatar_url: user.avatar_url

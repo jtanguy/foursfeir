@@ -1,4 +1,4 @@
-import { Temporal } from "@js-temporal/polyfill";
+import { Temporal } from "temporal-polyfill";
 
 export type Period = 'day' | 'morning' | 'afternoon';
 export const periods = {
@@ -47,11 +47,10 @@ export const getRequestPeriod = (today: Temporal.PlainDate, weeks = 2) => {
 
 	return [start, end]
 }
-
-export const getAllDatesFromPeriod = ([start, end]: [Temporal.PlainDate,Temporal.PlainDate]) => {
+export const getAllDatesFromPeriod = ([start, end]: [Temporal.PlainDate, Temporal.PlainDate]) => {
 	const period = start.until(end)
 
-	return Array.from({ length: period.days}, (_, i) => i)
+	return Array.from({ length: period.days }, (_, i) => i)
 		.map((i) => start.add({ days: i }))
 		.filter(d => d.dayOfWeek < SATURDAY)
 		.map(d => d.toString())

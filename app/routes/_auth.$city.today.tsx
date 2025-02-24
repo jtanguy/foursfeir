@@ -1,4 +1,4 @@
-import { Temporal } from "@js-temporal/polyfill";
+import { Temporal } from "temporal-polyfill";
 import { redirect } from "@remix-run/node";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 

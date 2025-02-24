@@ -10,7 +10,7 @@ import {
   useLoaderData,
   useMatches,
 } from "@remix-run/react";
-import { toTemporalInstant } from "@js-temporal/polyfill";
+import "temporal-polyfill"
 
 import picoStyles from "@picocss/pico/css/pico.min.css?url";
 import globalStyles from "~/styles/global.css?url";
@@ -18,14 +18,6 @@ import { FiGithub, FiLogOut } from "react-icons/fi";
 import { authenticator } from "./services/auth.server";
 import { getAdmin } from "./services/db/admins.server";
 import { getCities } from "./services/db/cities.server";
-
-if (!Date.prototype.hasOwnProperty("toTemporalInstant")) {
-  // eslint-disable-next-line no-extend-native
-  Object.defineProperty(Date.prototype, "toTemporalInstant", {
-    value: toTemporalInstant,
-    writable: false,
-  });
-}
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: picoStyles },
