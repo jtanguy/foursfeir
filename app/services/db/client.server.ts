@@ -1,9 +1,6 @@
 import { Datastore } from "@google-cloud/datastore";
-import { env } from "config";
 
-export const client = new Datastore({
-	keyFile: env.GOOGLE_APPLICATION_CREDENTIALS
-})
+export const client = new Datastore()
 
 export const KINDS = {
 	profile: 'Profile',
