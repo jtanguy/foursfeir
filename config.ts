@@ -4,8 +4,8 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     // For Datastore
-    GCP_SERVICE_ACCOUNT_EMAIL: z.string(),
-    GCP_PRIVATE_KEY: z.string(),
+    GCP_SERVICE_ACCOUNT_EMAIL: z.string().optional(),
+    GCP_PRIVATE_KEY: z.string().optional(),
     GCP_PROJECT_ID: z.string(),
 
     // Oauth
