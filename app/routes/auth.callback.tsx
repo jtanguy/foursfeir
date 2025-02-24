@@ -2,8 +2,7 @@ import { LoaderFunctionArgs } from '@remix-run/node'
 import { authenticator } from '~/services/auth.server'
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const method = process.env.OFFLINE === "true" ? "offline" : "google"
-	return authenticator.authenticate(method, request, {
+	return authenticator.authenticate("google", request, {
 		successRedirect: '/',
 		failureRedirect: '/login',
 	})

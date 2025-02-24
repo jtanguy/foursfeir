@@ -13,18 +13,6 @@ export function isProfile(p: Profile | Error | null): p is Profile {
 }
 
 export const profileLoader = new DataLoader(async (userIds: ReadonlyArray<string>) => {
-	if (process.env.OFFLINE == "true") {
-		const data = await import('@scripts/data/profiles.json');
-		return userIds.map(u => {
-			const found = data.default.find(p => p.id === u)
-			if (!found) return null
-			return {
-				...found,
-				full_name: found.full_name ?? found.email,
-				avatar_url: found.avatar_url ?? undefined,
-			}
-		})
-	}
 	const [results] = await client.get(userIds.map(u => client.key([KINDS.profile, u])))
 	const profiles = results.map(raw => ({ ...raw, id: raw[client.KEY].name }))
 	return userIds.map(u => (profiles as Profile[]).find(p => p[client.KEY].name === u) ?? null)
