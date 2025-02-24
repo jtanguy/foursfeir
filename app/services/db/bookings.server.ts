@@ -47,7 +47,7 @@ export async function getBookingsFor(citySlug: string, date: string | [string, s
   const query = client.createQuery(KINDS.booking).hasAncestor(ancestorKey);
 
   if (userId) {
-    query.filter('user_id', userId)
+    query.filter(new PropertyFilter('user_id', "=", userId))
   }
 
   if (!userId && Array.isArray(date)) {
