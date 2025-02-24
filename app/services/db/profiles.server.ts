@@ -3,6 +3,7 @@ import { KINDS, client } from "./client.server"
 import { emailToFoursfeirId } from "../profiles.utils";
 
 export type Profile = {
+	id: string,
 	full_name: string,
 	email: string,
 	avatar_url?: string,
@@ -25,7 +26,8 @@ export const profileLoader = new DataLoader(async (userIds: ReadonlyArray<string
 		})
 	}
 	const [results] = await client.get(userIds.map(u => client.key([KINDS.profile, u])))
-	return userIds.map(u => (results as Profile[]).find(p => p[client.KEY].name === u) ?? null)
+	const profiles = results.map(raw => ({ ...raw, id: raw[client.KEY].name }))
+	return userIds.map(u => (profiles as Profile[]).find(p => p[client.KEY].name === u) ?? null)
 })
 
 
@@ -39,7 +41,7 @@ export async function getProfile(user_id: string): Promise<Profile> {
 
 export async function getProfiles(): Promise<Profile[][]> {
 	const [profiles] = await client.createQuery(KINDS.profile).run()
-	return profiles.map((profile) => ({...profile, id: profile[client.KEY].name}))
+	return profiles.map((profile) => ({ ...profile, id: profile[client.KEY].name }))
 }
 
 export function saveProfile(profile: Profile) {
