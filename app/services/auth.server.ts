@@ -28,36 +28,11 @@ const googleStrategy = new GoogleStrategy<Profile>(
     return foursfeirProfile
   }
 )
-
-const emailStrategy = new FormStrategy<Profile>(async ({ form }) => {
-  const email = form.get('email')
-  const profilePath = '../../scripts/data/profiles.json'
-  const profiles = await import(profilePath)
-  const user = profiles.default.find(p => p.email === email)
-  if (!user) {
-    throw new Error('User not found')
-  }
-  console.log("Found user " + email)
-  return {
-    id: user.id,
-    email: user.email,
-    full_name: user.full_name ?? user.email,
-    avatar_url: user.avatar_url ?? undefined,
-    updatedAt: new Date()
-  }
-})
+authenticator.use(googleStrategy)
 
 function getUserFromRequest(request: Request): Promise<Profile> {
   return authenticator.isAuthenticated(request, { failureRedirect: '/login' })
 }
 
-
-if (process.env.OFFLINE === "true") {
-  console.log("Using offline strategy for login")
-  authenticator.use(emailStrategy, 'offline')
-} else {
-  console.log('Using google strategy for login')
-  authenticator.use(googleStrategy)
-}
 
 export { authenticator, getUserFromRequest }

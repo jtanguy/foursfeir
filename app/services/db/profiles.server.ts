@@ -3,6 +3,7 @@ import { KINDS, client } from "./client.server"
 import { emailToFoursfeirId } from "../profiles.utils";
 
 export type Profile = {
+	id: string,
 	full_name: string,
 	email: string,
 	avatar_url?: string,
@@ -12,21 +13,9 @@ export function isProfile(p: Profile | Error | null): p is Profile {
 }
 
 export const profileLoader = new DataLoader(async (userIds: ReadonlyArray<string>) => {
-	if (process.env.OFFLINE == "true") {
-		const profilePath = '../../../scripts/data/profiles.json';
-		const data = await import(profilePath);
-		return userIds.map(u => {
-			const found = data.default.find(p => p.id === u)
-			if (!found) return null
-			return {
-				...found,
-				full_name: found.full_name ?? found.email,
-				avatar_url: found.avatar_url ?? undefined,
-			}
-		})
-	}
 	const [results] = await client.get(userIds.map(u => client.key([KINDS.profile, u])))
-	return userIds.map(u => (results as Profile[]).find(p => p[client.KEY].name === u) ?? null)
+	const profiles = results.map(raw => ({ ...raw, id: raw[client.KEY].name }))
+	return userIds.map(u => (profiles as Profile[]).find(p => p[client.KEY].name === u) ?? null)
 })
 
 
@@ -40,7 +29,7 @@ export async function getProfile(user_id: string): Promise<Profile> {
 
 export async function getProfiles(): Promise<Profile[][]> {
 	const [profiles] = await client.createQuery(KINDS.profile).run()
-	return profiles.map((profile) => ({...profile, id: profile[client.KEY].name}))
+	return profiles.map((profile) => ({ ...profile, id: profile[client.KEY].name }))
 }
 
 export function saveProfile(profile: Profile) {

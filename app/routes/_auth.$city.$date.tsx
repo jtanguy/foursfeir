@@ -26,7 +26,7 @@ import { getUserFromRequest } from "~/services/auth.server";
 import { findIsAdmin } from "~/services/db/admins.server";
 import { getCity, getNoticeFor } from "~/services/db/cities.server";
 import { createBooking, deleteBooking, getBookingsFor, getOccupancy, withIndex } from "~/services/db/bookings.server";
-import { Period, isOverflowBooking, periods , groupBookings } from "~/services/bookings.utils";
+import { Period, isOverflowBooking, periods, groupBookings } from "~/services/bookings.utils";
 import { getProfiles, isProfile, profileLoader, saveProfile } from "~/services/db/profiles.server";
 import invariant from "~/services/validation.utils.server";
 import { emailToFoursfeirId } from "~/services/profiles.utils";
@@ -49,9 +49,10 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     findIsAdmin(user.id, params.city)
   ]);
 
-  const profiles = await getProfiles()
 
   const bookings = rawBookings.map(withIndex)
+
+  const profiles = await profileLoader.loadMany(bookings.map(b => b.user_id))
   const occupancy = getOccupancy(bookings);
   const grouped = groupBookings(bookings)
 
@@ -119,8 +120,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
       const previousBookings = await getBookingsFor(params.city, params.date, otherId)
 
-      if(previousBookings.length > 0) {
-        await Promise.all(previousBookings.map(({booking_id, city, date}) => deleteBooking({booking_id, city, date})))
+      if (previousBookings.length > 0) {
+        await Promise.all(previousBookings.map(({ booking_id, city, date }) => deleteBooking({ booking_id, city, date })))
       }
 
       await createBooking({
@@ -140,13 +141,13 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   if (f._action === "invite") {
     const previousBookings = await getBookingsFor(params.city, params.date, user.id)
 
-    if(previousBookings.length > 0) {
-      await Promise.all(previousBookings.map(({booking_id, city, date}) => deleteBooking({booking_id, city, date})))
+    if (previousBookings.length > 0) {
+      await Promise.all(previousBookings.map(({ booking_id, city, date }) => deleteBooking({ booking_id, city, date })))
     }
 
     const other = await profileLoader.load(user.id)
 
-    if(!other) {
+    if (!other) {
       profileLoader.clear(user.id)
       // we could remove this because the profile is created when the user logged
       await saveProfile({
