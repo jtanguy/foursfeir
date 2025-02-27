@@ -1,6 +1,7 @@
 import { Key, PropertyFilter } from "@google-cloud/datastore"
 import { client, KINDS } from "./client.server"
 import { City } from "./cities.server"
+import invariant from "../validation.utils.server"
 
 export type Admin = {
 	city: string,
@@ -38,6 +39,11 @@ export async function createAdmin(newAdmin: AdminInfo) {
 			await client.save({ key: localKey, data: { id: newAdmin.user_id, city: city.slug } })
 		}
 	}
+}
+
+export async function updateAdmin(newInfo: AdminInfo) {
+	await deleteAdmin(newInfo.user_id)
+	await createAdmin(newInfo)
 }
 
 export async function deleteAdmin(user_id: string) {

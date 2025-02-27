@@ -8,11 +8,12 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import Avatar from "~/components/Avatar";
 import { DeleteCityConfirm } from "~/components/DeleteCityConfirm";
+import { UpdateAdmin } from "~/components/UpdateAdmin";
 import { getUserFromRequest } from "~/services/auth.server";
 import { Collator } from "~/services/collator.utils";
-import { AdminInfo, createAdmin, deleteAdmin, getAdminTnfo, getAllAdmins, isUserSuperAdmin } from "~/services/db/admins.server";
+import { AdminInfo, createAdmin, deleteAdmin, getAdminTnfo, getAllAdmins, isUserSuperAdmin, updateAdmin } from "~/services/db/admins.server";
 import { createCity, deleteCity, getCities } from "~/services/db/cities.server";
-import { findProfile, profileLoader } from "~/services/db/profiles.server";
+import { findProfile, getProfile, profileLoader } from "~/services/db/profiles.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const user = await getUserFromRequest(request)
@@ -60,8 +61,16 @@ const schema = zfd.formData(
 		z.object({
 			_action: z.literal("demote"),
 			user_id: zfd.text()
+		}),
+		z.object({
+			_action: z.literal("manage"),
+			user_id: zfd.text(),
+			global: zfd.checkbox(),
+			local: zfd.repeatableOfType(zfd.text())
 		})
 	]).refine((data) => data._action !== "create" || data.capacity <= data.max_capacity, { message: "La capacité max doit être supérieure à la capacité" })
+		.refine(data => data._action !== "promote" || (data.global == false || data.local.length === 0), { message: "Vous devez sélectionner au moins un lieu ou global" })
+		.refine(data => data._action !== "manage" || (data.global == false || data.local.length === 0), { message: "Vous devez sélectionner au moins un lieu ou global" })
 )
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -97,6 +106,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 		await deleteAdmin(f.user_id)
 		return new Response(null, { status: 202 })
 	}
+	if (f._action === "manage") {
+		const allCities = await getCities()
+		const newInfo: AdminInfo = f.global ?
+			{ type: "global", user_id: f.user_id }
+			:
+			{
+				type: "local", user_id: f.user_id, cities: allCities.filter(c => f.local.includes(c.slug))
+			}
+		await updateAdmin(newInfo)
+		return new Response(null, { status: 201 });
+	}
 }
 
 
@@ -131,7 +151,7 @@ export default function AdminIndex() {
 										<td>{city.capacity}</td>
 										<td>{city.max_capacity}</td>
 										<td>
-											<Link to={`/admin/${city.slug}`}><FaCog title="Administrer" /></Link>
+											<Link className="secondary" to={`/admin/${city.slug}`}><FaCog title="Administrer" /></Link>
 											<DeleteCityConfirm city={city} />
 										</td>
 									</tr>
@@ -170,16 +190,19 @@ export default function AdminIndex() {
 										{info.type === "local" && `${info.cities.map(c => c.label)}`}
 									</td>
 									<td>
-										<Form method="post" className="admin-form">
-											<input type="hidden" name="user_id" value={info.user_id} />
-											<button
-												className="inline-button icon"
-												name="_action"
-												value="demote"
-											>
-												<FaUserMinus title="Retirer des admins" />
-											</button>
-										</Form>
+										{info.user_id !== adminInfo.user_id && <div className="grid">
+											{info.profile && <UpdateAdmin profile={info.profile} info={info} cities={cities} />}
+											<Form method="post" className="admin-form">
+												<input type="hidden" name="user_id" value={info.user_id} />
+												<button
+													className="inline-button icon danger"
+													name="_action"
+													value="demote"
+												>
+													<FaUserMinus title="Retirer des admins" />
+												</button>
+											</Form>
+										</div>}
 									</td>
 								</tr>
 							}
