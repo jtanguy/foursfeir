@@ -43,6 +43,9 @@ details.dropdown.header-user ul li::after {
   border-radius: 50%;
   vertical-align: text-top;
 }
+.avatar--huge{
+  --avatar-size: 5rem;
+}
 
 .avatar svg {
   height: var(--avatar-size);
@@ -63,6 +66,9 @@ button.icon:hover,
 button.icon:active,
 button.icon:focus {
   --color: var(--contrast)
+}
+button.danger{
+  --color: var(--pico-del-color)
 }
 
 .hero--axolotl-blue {

@@ -14,7 +14,7 @@ export function DeleteCityConfirm({ city }: Props) {
 	const openModal = () => setOpen(true)
 	const closeModal = () => setOpen(false)
 	return <>
-		<button type="button" className="icon" onClick={openModal}>
+		<button type="button" className="icon danger" onClick={openModal}>
 			<FiTrash aria-label="Supprimer le lieu" />
 		</button>
 		<dialog open={open}>
@@ -38,5 +38,4 @@ export function DeleteCityConfirm({ city }: Props) {
 			</fetcher.Form>
 		</dialog >
 	</>
-
 }
