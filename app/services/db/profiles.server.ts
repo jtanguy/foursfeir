@@ -18,6 +18,9 @@ export const profileLoader = new DataLoader(async (userIds: ReadonlyArray<string
 	return userIds.map(u => (profiles as Profile[]).find(p => p[client.KEY].name === u) ?? null)
 })
 
+export async function findProfile(email: string) {
+	return getProfile(emailToFoursfeirId(email))
+}
 
 export async function getProfile(user_id: string): Promise<Profile> {
 	const res = await profileLoader.load(user_id)
