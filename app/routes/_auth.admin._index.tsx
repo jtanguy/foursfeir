@@ -13,7 +13,7 @@ import { getUserFromRequest } from "~/services/auth.server";
 import { Collator } from "~/services/collator.utils";
 import { AdminInfo, createAdmin, deleteAdmin, getAdminTnfo, getAllAdmins, isUserSuperAdmin, updateAdmin } from "~/services/db/admins.server";
 import { createCity, deleteCity, getCities } from "~/services/db/cities.server";
-import { findProfile, getProfile, profileLoader } from "~/services/db/profiles.server";
+import { findProfile, profileLoader } from "~/services/db/profiles.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const user = await getUserFromRequest(request)

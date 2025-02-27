@@ -1,7 +1,6 @@
 import { Key, PropertyFilter } from "@google-cloud/datastore"
 import { client, KINDS } from "./client.server"
 import { City } from "./cities.server"
-import invariant from "../validation.utils.server"
 
 export type Admin = {
 	city: string,
