@@ -73,9 +73,6 @@ export function CalendarDay({
         {notice && <> &mdash; {notice}</>}
       </h2>
       {"   "}
-      {/* {fetcher.state === "idle" && fetcher.data?.error && (
-        <span className="error">{fetcher.data?.message}</span>
-      )} */}
       <>
         <div>
           {isFuture && (
@@ -176,49 +173,58 @@ export function CalendarDay({
                       Se désinscrire
                     </button>
                   ) : (
-                    <details className="dropdown">
-                      <summary role="button">
-                        S&apos;inscrire
-                      </summary>
-                      <ul>
-                        <li>
-                          <button
-                            type="submit"
-                            form={selfFormId}
-                            name="period"
-                            value="day"
-                            className="inline-button no-button calendar-people__book-self"
-                            disabled={isFull}
-                          >
-                            Journée
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            type="submit"
-                            form={selfFormId}
-                            name="period"
-                            value="morning"
-                            className="inline-button no-button calendar-people__book-self"
-                            disabled={isFull}
-                          >
-                            Matin
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            type="submit"
-                            form={selfFormId}
-                            name="period"
-                            value="afternoon"
-                            className="inline-button no-button calendar-people__book-self"
-                            disabled={isFull}
-                          >
-                            Après-midi
-                          </button>
-                        </li>
-                      </ul>
-                    </details>
+                    isFull ? (
+
+                      <button
+                        disabled
+                        className="calendar-people__book-self"
+                      >
+                        Capacité atteinte
+                      </button>
+                    ) :
+                      <details className="dropdown">
+                        <summary role="button">
+                          S&apos;inscrire
+                        </summary>
+                        <ul>
+                          <li>
+                            <button
+                              type="submit"
+                              form={selfFormId}
+                              name="period"
+                              value="day"
+                              className="inline-button no-button calendar-people__book-self"
+                              disabled={isFull}
+                            >
+                              Journée
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              type="submit"
+                              form={selfFormId}
+                              name="period"
+                              value="morning"
+                              className="inline-button no-button calendar-people__book-self"
+                              disabled={isFull}
+                            >
+                              Matin
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              type="submit"
+                              form={selfFormId}
+                              name="period"
+                              value="afternoon"
+                              className="inline-button no-button calendar-people__book-self"
+                              disabled={isFull}
+                            >
+                              Après-midi
+                            </button>
+                          </li>
+                        </ul>
+                      </details>
                   )}
                 </div>
               )}
@@ -232,6 +238,6 @@ export function CalendarDay({
         max={capacity}
         className="calendar-day__gauge"
       />
-    </article>
+    </article >
   );
 }
