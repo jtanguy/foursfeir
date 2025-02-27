@@ -1,6 +1,7 @@
 import DataLoader from "dataloader"
 import { client, KINDS } from "./client.server"
 import { PropertyFilter } from "@google-cloud/datastore"
+import { Temporal } from "temporal-polyfill"
 
 // #region Types
 export type City = {
@@ -21,6 +22,23 @@ export type Notice = {
 
 
 // #region Data access
+export async function createCity(newCity: City) {
+	const key = client.key([KINDS.city, newCity.slug])
+	await client.save({
+		key, data: { ...newCity, created_at: Temporal.Now.instant().toString() }
+	})
+}
+
+export async function updateCity(slug: string, newData: Omit<City, "slug">) {
+	const key = client.key([KINDS.city, slug])
+	await client.save({ key, data: { slug, ...newData } })
+}
+
+export async function deleteCity(slug: string) {
+	const key = client.key([KINDS.city, slug])
+	await client.delete(key)
+}
+
 export async function getCities(): Promise<City[]> {
 	const query = await client.createQuery(KINDS.city)
 	const [res] = await query.run()
@@ -28,9 +46,10 @@ export async function getCities(): Promise<City[]> {
 }
 
 export async function getCity(slug: string): Promise<City> {
-	const [res] = await client.get(client.key([KINDS.city, slug]))
+	const key = client.key([KINDS.city, slug])
+	const [res] = await client.get(key)
 	if (!res) {
-		throw new Error('City not found')
+		throw new Error(`City ${slug} not found`)
 	}
 	return res
 }
@@ -46,9 +65,9 @@ export async function getNoticeFor(citySlug: string, day: string): Promise<Notic
 	return res ?? null
 }
 
-export async function createNotice(notice: Notice) {
+export async function createNotice(notice: Omit<Notice, "created_at">) {
 	const key = client.key([KINDS.city, notice.city, KINDS.notice, notice.date])
-	await client.save({ key, data: notice })
+	await client.save({ key, data: { ...notice, created_at: Temporal.Now.instant().toString() } })
 }
 
 export async function deleteNotice(notice: Pick<Notice, "city" | "date">) {

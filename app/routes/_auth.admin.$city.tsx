@@ -1,19 +1,24 @@
 import { Temporal } from "temporal-polyfill";
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Link, Form, useLoaderData } from "@remix-run/react";
 import { FiPlus, FiTrash } from "react-icons/fi";
+import { RouteMatch } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { getUserFromRequest } from "~/services/auth.server";
-import { findIsAdmin } from "~/services/db/admins.server";
-import { createNotice, deleteNotice, getAllNotices, getCity } from "~/services/db/cities.server";
+import { isUserAdmin } from "~/services/db/admins.server";
+import { createNotice, deleteNotice, getAllNotices, getCity, updateCity } from "~/services/db/cities.server";
 import invariant from "~/services/validation.utils.server";
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => [
+  { title: `FourSFEIR Admin | ${data?.city.label}` }
+]
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   invariant(params.city, 'No city given')
   const user = await getUserFromRequest(request)
-  const isAdmin = await findIsAdmin(user.id, params.city)
+  const isAdmin = await isUserAdmin(user.id, params.city)
 
   if (!isAdmin) {
     throw redirect(`/${params.city}`);
@@ -42,20 +47,36 @@ const schema = zfd.formData(
       _action: z.literal("delete"),
       date: zfd.text(),
     }),
+    z.object({
+      _action: z.literal("update"),
+      label: zfd.text(z.string().nonempty()),
+      capacity: zfd.numeric(),
+      max_capacity: zfd.numeric()
+    })
   ])
-);
+).refine((data) => data._action !== "update" || data.capacity <= data.max_capacity, { message: "La capacité max doit être supérieure à la capacité" });
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  if (!params.city) throw new Response("No city given", { status: 400 });
+  invariant(params.city, 'No city given')
+  const user = await getUserFromRequest(request)
+  const isAdmin = await isUserAdmin(user.id, params.city)
+  if (!isAdmin) throw new Response("Forbidden", { status: 403 })
 
   const f = schema.parse(await request.formData());
 
   if (f._action === "create") {
-    await createNotice({ city: params.city, date: f.date, message: f.message, temp_capacity: f.temp_capacity, created_at: new Date().toISOString() })
+    const { _action, ...data } = f
+    await createNotice({ city: params.city, ...data })
     return new Response(null, { status: 201 });
-  } else {
+  }
+  if (f._action === "delete") {
     await deleteNotice({ city: params.city, date: f.date })
     return new Response(null, { status: 202 });
+  }
+  if (f._action === "update") {
+    const { _action, ...data } = f
+    await updateCity(params.city, data)
+    return new Response(null, { status: 201 });
   }
 };
 
@@ -63,15 +84,15 @@ export default function CityAdmin() {
   const { notices, city } = useLoaderData<typeof loader>();
   return (
     <>
-      <h1>Admin</h1>
+      <h1>{city.label}</h1>
       <h2>Évènements exceptionnels</h2>
-      <table role="grid">
+      <table className="striped">
         <thead>
           <tr>
             <th scope="col">Date</th>
             <th scope="col">Message</th>
             <th scope="col">Capacité (par défaut {city.capacity})</th>
-            <th scope="col"></th>
+            <th scope="col">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -128,7 +149,41 @@ export default function CityAdmin() {
           </tr>
         </tfoot>
       </table>
-      <ul></ul>
+      <div>
+        <h4>Actions</h4>
+        <div className="grid">
+          <details>
+            <summary role="button">Modifier le lieu</summary>
+            <Form method="post">
+              <label>
+                Nom
+                <input type="text" name="label" defaultValue={city.label} />
+              </label>
+              <div className="grid">
+                <label>
+                  Capacité normale
+                  <input type="number" min="0" name="capacity" defaultValue={city.capacity} />
+                </label>
+                <label>
+                  Capacité max
+                  <input type="number" min="0" name="max_capacity" defaultValue={city.max_capacity} />
+                </label>
+              </div>
+
+              <button
+                name="_action"
+                value="update"
+              >
+                Mettre à jour
+              </button>
+            </Form>
+          </details>
+        </div>
+      </div>
     </>
   );
 }
+
+export const handle = {
+  breadcrumb: (match: RouteMatch) => <Link to={match.pathname}>{match.params.city}</Link>,
+};

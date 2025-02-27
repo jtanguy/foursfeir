@@ -8,6 +8,7 @@ body {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: space-between;
   gap: 0.3em;
 }
 
@@ -17,6 +18,7 @@ body {
 
 .header-user {
   --avatar-size: 1.5em;
+  margin-bottom: 0;
 }
 
 .header-user button {
@@ -36,8 +38,8 @@ details.dropdown.header-user ul li::after {
 
 .avatar {
   display: inline-block;
-  height: var(--avatar-size);
-  width: var(--avatar-size);
+  height: var(--avatar-size, 1.5em);
+  width: var(--avatar-size, 1.5em);
   border-radius: 50%;
   vertical-align: text-top;
 }
@@ -185,6 +187,11 @@ details.calendar-people[open]>*:not(summary) {
   width: 100%;
   display: flex;
   align-items: center;
+}
+
+.avatar--globaladmin {
+  --color: var(--pico-primary-border);
+  border: 2px solid var(--color, var(--pico-color));
 }
 
 .avatar--overflow {

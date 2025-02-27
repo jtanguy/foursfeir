@@ -1,10 +1,16 @@
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, Outlet, useLoaderData } from "@remix-run/react";
 import { RouteMatch } from "react-router";
 import { getUserFromRequest } from "~/services/auth.server";
 import { getCity } from "~/services/db/cities.server";
 import invariant from "~/services/validation.utils.server";
+
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => [
+
+  { title: `FourSFEIR | ${data.city}` }
+]
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   invariant(params.city, "No city given")

@@ -79,5 +79,5 @@ export async function deleteBooking(booking: Pick<Booking, "city" | "date" | "bo
 
 
 export function isBooking<B extends Booking>(b: B | Error | null): b is B {
-  return !(b instanceof Error) && b?.id != null
+  return !(b instanceof Error) && b != null && "id" in b && b?.id != null
 }

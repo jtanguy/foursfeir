@@ -3,6 +3,7 @@ import type {
   ActionFunctionArgs,
   LinksFunction,
   LoaderFunctionArgs,
+  MetaFunction,
 } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
@@ -22,7 +23,7 @@ import Avatar from "~/components/Avatar";
 
 import daily from "~/styles/daily.css?url";
 import { getUserFromRequest } from "~/services/auth.server";
-import { findIsAdmin } from "~/services/db/admins.server";
+import { isUserAdmin } from "~/services/db/admins.server";
 import { getCity, getNoticeFor } from "~/services/db/cities.server";
 import { createBooking, deleteBooking, getBookingsFor, getOccupancy, withIndex } from "~/services/db/bookings.server";
 import { Period, isOverflowBooking, periods, groupBookings } from "~/services/bookings.utils";
@@ -30,6 +31,10 @@ import { isProfile, profileLoader, saveProfile } from "~/services/db/profiles.se
 import invariant from "~/services/validation.utils.server";
 import { emailToFoursfeirId } from "~/services/profiles.utils";
 import { Temporal } from "temporal-polyfill";
+
+export const meta: MetaFunction<typeof loader> = ({ data, params }) => [
+  { title: `FourSFEIR | ${data?.city.label} | ${params.date}` }
+]
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   invariant(params.city, "No city given")
@@ -46,7 +51,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     getCity(params.city),
     getNoticeFor(params.city, params.date),
     getBookingsFor(params.city, params.date),
-    findIsAdmin(user.id, params.city)
+    isUserAdmin(user.id, params.city)
   ]);
 
 
@@ -57,10 +62,11 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const grouped = groupBookings(bookings)
 
   return json({
+    city: city,
     notice: notice?.message,
-    capacity: city.capacity,
+    // capacity: city.capacity,
     tempCapacity: notice?.temp_capacity,
-    maxCapacity: city.max_capacity,
+    // maxCapacity: city.max_capacity,
     bookings: grouped,
     selfBooking: bookings.find(b => b.user_id === user.id),
     occupancy,
@@ -172,7 +178,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   }
 
 
-  const admin = await findIsAdmin(user!.id, params.city!)
+  const admin = await isUserAdmin(user!.id, params.city!)
   if (admin && f._action === "remove") {
     await deleteBooking({ booking_id: f.booking_id, city: params.city, date: params.date })
     return new Response(null, { status: 202 });
@@ -189,8 +195,9 @@ export const links: LinksFunction = () => [
 
 export default function Current() {
   const { date: dateStr } = useParams();
-  const { bookings, selfBooking, occupancy, capacity, notice, tempCapacity, maxCapacity, profiles, admin } =
+  const { bookings, selfBooking, city, occupancy, notice, tempCapacity, profiles, admin } =
     useLoaderData<typeof loader>();
+  const { capacity, max_capacity: maxCapacity } = city;
   const navigation = useNavigation();
   const deleteFetcher = useFetcher();
 
@@ -282,6 +289,7 @@ export default function Current() {
                         {isOverflow && ` (Surnuméraire)`}
                         {admin && isFuture && (
                           <span>
+                            {" "}
                             <deleteFetcher.Form
                               method="post"
                               className="inline-form"
@@ -320,9 +328,9 @@ export default function Current() {
           <Form method="post">
             <input type="hidden" name="_action" value="invite" />
             <fieldset className="guest-form">
-              <legend>Inscrire un invité/une invitée</legend>
+              <legend>Je m'inscris avec des +1</legend>
               <fieldset>
-                <legend>Ma période</legend>
+                <legend>Mon inscription</legend>
                 <label>
                   <input
                     type="radio"
@@ -404,7 +412,7 @@ export default function Current() {
           <Form method="post">
             <input type="hidden" name="_action" value="book" />
             <fieldset className="colleague-form">
-              <legend>Inscrire un Sfeirien/une Sfeirienne</legend>
+              <legend>J'inscris un/une autre Sferian à sa place</legend>
               <label>
                 Email
                 <input
