@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    EMAIL_DOMAIN: z.string().default("sfeir.com"),
+    EMAIL_DOMAIN: z.string(),
     NAMESPACE: z.string().optional(),
     // For Datastore
     GCP_SERVICE_ACCOUNT_EMAIL: z.string().optional(),
