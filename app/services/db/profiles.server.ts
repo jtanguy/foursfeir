@@ -15,7 +15,7 @@ export function isProfile(p: Profile | Error | null): p is Profile {
 export const profileLoader = new DataLoader(async (userIds: ReadonlyArray<string>) => {
 	const [results] = await client.get(userIds.map(u => client.key([KINDS.profile, u])))
 	const profiles = results.map(raw => ({ ...raw, id: raw[client.KEY].name }))
-	return userIds.map(u => (profiles as Profile[]).find(p => p[client.KEY].name === u) ?? null)
+	return userIds.map(u => (profiles as Profile[]).find(p => p.id === u) ?? null)
 })
 
 export async function findProfile(email: string) {

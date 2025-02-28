@@ -2,6 +2,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Form, Link, useLoaderData } from "@remix-run/react";
 import cx from "classnames"
+import { env } from "config";
 import { useState } from "react";
 import { FaCog, FaUserMinus } from "react-icons/fa";
 import { z } from "zod";
@@ -54,7 +55,7 @@ const schema = zfd.formData(
 		}),
 		z.object({
 			_action: z.literal("promote"),
-			email: zfd.text(z.string().email().endsWith("@sfeir.com")),
+			email: zfd.text(z.string().email().endsWith(env.EMAIL_DOMAIN)),
 			global: zfd.checkbox(),
 			local: zfd.repeatableOfType(zfd.text())
 		}),

@@ -3,6 +3,8 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
+    EMAIL_DOMAIN: z.string(),
+    NAMESPACE: z.string().optional(),
     // For Datastore
     GCP_SERVICE_ACCOUNT_EMAIL: z.string().optional(),
     GCP_PRIVATE_KEY: z.string().optional(),
