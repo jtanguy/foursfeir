@@ -50,12 +50,3 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   return new Response(null, { status: 204 });
 };
-
-export default function SearchTest() {
-  return (
-    <main className="container">
-      <h2>Search profile</h2>
-      <ProfileSearch debug />
-    </main>
-  );
-}
