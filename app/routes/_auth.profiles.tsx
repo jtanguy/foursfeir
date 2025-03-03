@@ -3,12 +3,12 @@ import z from "zod";
 import Fuse from "fuse.js";
 import { getUserFromRequest } from "~/services/auth.server";
 import { getProfiles, Profile } from "~/services/db/profiles.server";
-import ProfileSearch, { ProfileSearchLoaderData } from "~/components/ProfileSearch";
+import { ProfileSearchLoaderData } from "~/components/ProfileSearch";
 import { zfd } from "zod-form-data";
 
 let fuseInstance: Fuse<Profile> | null = null;
 
-const schema = z.string().max(50).nullable();
+const schema = z.string().trim().min(2).max(50).nullable();
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await getUserFromRequest(request);

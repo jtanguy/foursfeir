@@ -5,6 +5,7 @@ import cx from "classnames"
 import { env } from "config";
 import { useState } from "react";
 import { FaCog, FaUserMinus } from "react-icons/fa";
+import { LuExternalLink } from "react-icons/lu";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import Avatar from "~/components/Avatar";
@@ -45,37 +46,51 @@ const schema = zfd.formData(
 	z.discriminatedUnion("_action", [
 		z.object({
 			_action: z.literal("create"),
-			label: zfd.text(),
+			label: zfd.text(z.string().min(1).max(100)),
 			slug: zfd.text(z.string()
-				.regex(/[a-z0-9-]+/, { message: "Le slug ne peut contenir que des minuscules et des tirets" })
-				.refine(slug => !["admin", "me"].includes(slug), { message: "Les slug 'admin' et 'me' sont réservés" })),
-			capacity: zfd.numeric(),
-			max_capacity: zfd.numeric(),
+				.min(2)
+				.max(50)
+				.regex(/^[a-z0-9-]+$/, { message: "Le slug ne peut contenir que des minuscules, des chiffres et des tirets" })
+				.refine(slug => !["admin", "me", "profiles", "login", "logout", "auth"].includes(slug), {
+					message: "Ce slug est réservé",
+					path: ["slug"]
+				})),
+			capacity: zfd.numeric(z.number().int().min(0)),
+			max_capacity: zfd.numeric(z.number().int().min(0)),
 		}),
 		z.object({
 			_action: z.literal("delete"),
-			slug: zfd.text()
+			slug: zfd.text(z.string().min(2).max(50))
 		}),
 		z.object({
 			_action: z.literal("promote"),
-			user_id: zfd.text(),
+			user_id: zfd.text(z.string().uuid()),
 			global: zfd.checkbox(),
-			local: zfd.repeatableOfType(zfd.text())
+			local: zfd.repeatableOfType(zfd.text(z.string().min(2).max(50)))
 		}),
 		z.object({
 			_action: z.literal("demote"),
-			user_id: zfd.text()
+			user_id: zfd.text(z.string().uuid())
 		}),
 		z.object({
 			_action: z.literal("manage"),
-			user_id: zfd.text(),
+			user_id: zfd.text(z.string().uuid()),
 			global: zfd.checkbox(),
-			local: zfd.repeatableOfType(zfd.text())
+			local: zfd.repeatableOfType(zfd.text(z.string().min(2).max(50)))
 		})
-	]).refine((data) => data._action !== "create" || data.capacity <= data.max_capacity, { message: "La capacité max doit être supérieure à la capacité" })
-		.refine(data => data._action !== "promote" || (data.global == false || data.local.length === 0), { message: "Vous devez sélectionner au moins un lieu ou global" })
-		.refine(data => data._action !== "manage" || (data.global == false || data.local.length === 0), { message: "Vous devez sélectionner au moins un lieu ou global" })
-)
+	])
+).refine((data) => data._action !== "create" || data.capacity <= data.max_capacity, {
+	message: "La capacité max doit être supérieure à la capacité",
+	path: ["capacity"]
+})
+	.refine(data => data._action !== "promote" || (data.global == false || data.local.length === 0), {
+		message: "Vous devez sélectionner au moins un lieu ou global",
+		path: ["global"]
+	})
+	.refine(data => data._action !== "manage" || (data.global == false || data.local.length === 0), {
+		message: "Vous devez sélectionner au moins un lieu ou global",
+		path: ["global"]
+	});
 
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const user = await getUserFromRequest(request)
@@ -150,11 +165,11 @@ export default function AdminIndex() {
 							{administeredCities.map((city) => {
 								return (
 									<tr key={city.slug}>
-										<td><Link to={`/${city.slug}`}>{city.label}</Link></td>
+										<td><Link to={`/admin/${city.slug}`}>{city.label}</Link></td>
 										<td>{city.capacity}</td>
 										<td>{city.max_capacity}</td>
 										<td>
-											<Link className="secondary" to={`/admin/${city.slug}`}><FaCog title="Administrer" /></Link>
+											<Link className="secondary" to={`/${city.slug}`}><LuExternalLink title="Visiter" /></Link>
 											<DeleteCityConfirm city={city} />
 										</td>
 									</tr>
@@ -174,8 +189,8 @@ export default function AdminIndex() {
 							</tr>
 						</thead>
 						<tbody>
-							{admins.map(info => {
-								return <tr
+							{admins.map(info => (
+								<tr
 									key={info.user_id}
 								>
 									<td>
@@ -208,8 +223,7 @@ export default function AdminIndex() {
 										</div>}
 									</td>
 								</tr>
-							}
-							)}
+							))}
 						</tbody>
 					</table>
 				</div>

@@ -39,22 +39,25 @@ const schema = zfd.formData(
   z.discriminatedUnion("_action", [
     z.object({
       _action: z.literal("create"),
-      date: zfd.text(),
-      message: zfd.text(),
-      temp_capacity: zfd.numeric(z.number().optional()),
+      date: zfd.text(z.string().date()),
+      message: zfd.text(z.string().min(1).max(500)),
+      temp_capacity: zfd.numeric(z.number().int().min(0)).optional(),
     }),
     z.object({
       _action: z.literal("delete"),
-      date: zfd.text(),
+      date: zfd.text(z.string().date()),
     }),
     z.object({
       _action: z.literal("update"),
-      label: zfd.text(z.string().nonempty()),
-      capacity: zfd.numeric(),
-      max_capacity: zfd.numeric()
+      label: zfd.text(z.string().min(1).max(100)),
+      capacity: zfd.numeric(z.number().int().min(0)),
+      max_capacity: zfd.numeric(z.number().int().min(0))
     })
   ])
-).refine((data) => data._action !== "update" || data.capacity <= data.max_capacity, { message: "La capacité max doit être supérieure à la capacité" });
+).refine((data) => data._action !== "update" || data.capacity <= data.max_capacity, {
+  message: "La capacité max doit être supérieure à la capacité",
+  path: ["capacity"]
+});
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   invariant(params.city, 'No city given')

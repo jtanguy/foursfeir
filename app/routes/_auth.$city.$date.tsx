@@ -12,8 +12,9 @@ import {
   useLoaderData,
   useNavigation,
   useParams,
+  useSearchParams,
 } from "@remix-run/react";
-import { RouteMatch } from "react-router"
+import { RouteMatch, useLocation } from "react-router"
 import cx from "classnames";
 import { zfd } from "zod-form-data";
 import { z } from "zod";
@@ -25,8 +26,8 @@ import daily from "~/styles/daily.css?url";
 import { getUserFromRequest } from "~/services/auth.server";
 import { isUserAdmin } from "~/services/db/admins.server";
 import { getCity, getNoticeFor } from "~/services/db/cities.server";
-import { createBooking, deleteBooking, getBookingsFor, getOccupancy, withIndex } from "~/services/db/bookings.server";
-import { Period, isOverflowBooking, periods, groupBookings } from "~/services/bookings.utils";
+import { createBooking, deleteBooking, getBookingsFor, getOccupancy } from "~/services/db/bookings.server";
+import { Period, isOverflowBooking, periods, groupBookings, indexBookings } from "~/services/bookings.utils";
 import { isProfile, profileLoader, saveProfile } from "~/services/db/profiles.server";
 import invariant from "~/services/validation.utils.server";
 import { emailToFoursfeirId } from "~/services/profiles.utils";
@@ -40,6 +41,10 @@ export const meta: MetaFunction<typeof loader> = ({ data, params }) => [
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   invariant(params.city, "No city given")
   invariant(params.date, "No date given")
+
+  // Validate date format
+  z.string().date().parse(params.date);
+
   const user = await getUserFromRequest(request)
 
 
@@ -56,7 +61,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   ]);
 
 
-  const bookings = rawBookings.map(withIndex)
+  const bookings = indexBookings(rawBookings)
 
   const profiles = await profileLoader.loadMany(bookings.map(b => b.user_id))
   const occupancy = getOccupancy(bookings);
@@ -65,9 +70,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   return json({
     city: city,
     notice: notice?.message,
-    // capacity: city.capacity,
     tempCapacity: notice?.temp_capacity,
-    // maxCapacity: city.max_capacity,
     bookings: grouped,
     selfBooking: bookings.find(b => b.user_id === user.id),
     occupancy,
@@ -83,22 +86,20 @@ const schema = zfd.formData(
       _action: z.literal("book"),
       period: zfd.text(z.enum(["day", "morning", "afternoon"])),
       for_user: zfd.text(z.string().email()),
-      for_user_name: zfd.text().optional(),
+      for_user_name: zfd.text(z.string().min(2).max(100)).optional(),
     }),
     z.object({
       _action: z.literal("invite"),
       period: zfd.text(z.enum(["day", "morning", "afternoon"])),
-      guests: z
-        .object({
-          day: zfd.numeric().optional(),
-          morning: zfd.numeric().optional(),
-          afternoon: zfd.numeric().optional(),
-        })
-        .optional(),
+      guests: z.object({
+        day: zfd.numeric(z.number().int().min(0).max(10)).optional(),
+        morning: zfd.numeric(z.number().int().min(0).max(10)).optional(),
+        afternoon: zfd.numeric(z.number().int().min(0).max(10)).optional(),
+      }).optional(),
     }),
     z.object({
       _action: z.literal("remove"),
-      booking_id: zfd.text(),
+      booking_id: zfd.numeric(),
     }),
   ])
 );
@@ -201,6 +202,10 @@ export default function Current() {
   const { capacity, max_capacity: maxCapacity } = city;
   const navigation = useNavigation();
   const deleteFetcher = useFetcher();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const sortSchema = z.enum(["created_at", "period"]).nullable().default("period")
+  const sort = sortSchema.parse(searchParams.get("sort"))
 
   const day = Temporal.PlainDate.from(dateStr!);
   const today = Temporal.Now.plainDateISO()
@@ -243,6 +248,7 @@ export default function Current() {
         })}
       </h2>
 
+
       {notice && (
         <h3>
           Note: {notice}. {tempCapacity != null && <>Capacité réduite à {actualMaxCapacity}</>}
@@ -255,18 +261,87 @@ export default function Current() {
           <>Attention: débordement dans les autres salles à prévoir</>
         )}
       </p>
+      <div className="grid">
+        <div className="calendar-people">
+          {sort === "period" ? (
+            // Tri par période
+            (['morning', 'day', 'afternoon'] as Period[]).map((period) => {
+              const periodBookings = bookings[period];
+              if (periodBookings.length > 0) {
+                return (
+                  <Fragment key={period}>
+                    <h3>{periods[period]}</h3>
+                    <ul className="calendar-people__list" key={period}>
+                      {periodBookings
+                        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                        .map((booking) => {
+                          const profile = profiles.find(p => p.id === booking.user_id)!
 
-      <div className="calendar-people">
-        {(['morning', 'day', 'afternoon'] as Period[]).map((period) => {
-          const periodBookings = bookings[period];
-          if (periodBookings.length > 0) {
-            return (
-              <Fragment key={period}>
-                <h3>{periods[period]}</h3>
-                <ul className="calendar-people__list" key={period}>
-                  {periodBookings.map((booking) => {
+                          const isDeleteSubmitting =
+                            deleteFetcher.state !== "idle" &&
+                            deleteFetcher.formData?.get("user_id") == profile.id;
+                          const isOverflow = isOverflowBooking(booking, capacity);
+                          const guestsString = formatter.format(
+                            Object.entries(booking.guests)
+                              .filter((p) => p[1] > 0)
+                              .map((p) => `${p[1]} ${periods[p[0] as Period]}`)
+                          );
+                          return (
+                            <li key={profile.id} aria-busy={isDeleteSubmitting}>
+                              <Avatar
+                                className={cx('avatar', {
+                                  "avatar--overflow": isOverflow,
+                                  "avatar--partial": booking.period != "day",
+                                })}
+                                profile={profile}
+                              />
+                              <span>{profile.full_name ?? profile.email}</span>
+                              {guestsString && ` (+${guestsString})`}
+                              {isOverflow && ` (Surnuméraire)`}
+                              {admin && isFuture && (
+                                <span>
+                                  {" "}
+                                  <deleteFetcher.Form
+                                    method="post"
+                                    className="inline-form"
+                                  >
+                                    <input
+                                      type="hidden"
+                                      name="booking_id"
+                                      value={booking.booking_id}
+                                    />
+
+                                    <button
+                                      className="inline-button icon"
+                                      name="_action"
+                                      value="remove"
+                                    >
+                                      <FiUserMinus
+                                        title="Désinscrire"
+                                        aria-label="Désinscrire"
+                                      />
+                                    </button>
+                                  </deleteFetcher.Form>
+                                </span>
+                              )}
+                            </li>
+                          );
+                        })}
+                    </ul>
+                  </Fragment>
+                );
+              }
+            })
+          ) : (
+            // Tri par date d'inscription
+            <>
+              <h3>Inscrits</h3>
+              <ul className="calendar-people__list">
+                {Object.values(bookings)
+                  .flat()
+                  .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                  .map((booking) => {
                     const profile = profiles.find(p => p.id === booking.user_id)!
-
                     const isDeleteSubmitting =
                       deleteFetcher.state !== "idle" &&
                       deleteFetcher.formData?.get("user_id") == profile.id;
@@ -281,11 +356,14 @@ export default function Current() {
                         <Avatar
                           className={cx('avatar', {
                             "avatar--overflow": isOverflow,
-                            "avatar--partial": period != "day",
+                            "avatar--partial": booking.period != "day",
                           })}
                           profile={profile}
                         />
-                        <span>{profile.full_name ?? profile.email}</span>
+                        <span>
+                          {profile.full_name ?? profile.email}
+                          {" "}({periods[booking.period]})
+                        </span>
                         {guestsString && ` (+${guestsString})`}
                         {isOverflow && ` (Surnuméraire)`}
                         {admin && isFuture && (
@@ -317,11 +395,26 @@ export default function Current() {
                       </li>
                     );
                   })}
-                </ul>
-              </Fragment>
-            );
-          }
-        })}
+              </ul>
+            </>
+          )}
+        </div>
+        <div>
+          <label>Trier par :</label>
+          <Form className="inline">
+            <select
+              name="sort"
+              onChange={(e) => {
+                setSearchParams({ sort: e.target.value });
+              }}
+              value={sort ?? "period"}
+            >
+              <option value="period">Période</option>
+              <option value="created_at">Ordre d'inscription</option>
+            </select>
+          </Form>
+        </div>
+
       </div>
 
       {isFuture && (
@@ -418,6 +511,12 @@ export default function Current() {
                 Email
                 <ProfileSearch name="for_user" profileSelector={(p) => p?.email ?? ""} />
               </label>
+              {showNameInput && (
+                <label>
+                  Nom
+                  <input type="text" name="for_user_name" />
+                </label>
+              )}
               <fieldset>
                 <legend>Période</legend>
                 <label>
