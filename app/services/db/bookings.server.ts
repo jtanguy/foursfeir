@@ -1,6 +1,7 @@
 import { KINDS, client } from "./client.server"
 import { Booking } from "../bookings.utils";
 import { and, PropertyFilter } from "@google-cloud/datastore";
+import { Temporal } from "temporal-polyfill";
 
 /**
  * Compute the maximum number of people.
@@ -80,4 +81,17 @@ export async function deleteBooking(booking: Pick<Booking, "city" | "date" | "bo
 
 export function isBooking<B extends Booking>(b: B | Error | null): b is B {
   return !(b instanceof Error) && b != null && "id" in b && b?.id != null
+}
+
+export async function getBookingsForUser(userId: string, month: Temporal.PlainYearMonth): Promise<Booking[]> {
+  const start = month.toPlainDate({ day: 1 });
+  const end = month.toPlainDate({ day: month.daysInMonth });
+  const [bookings] = await client.createQuery(KINDS.booking)
+    .filter(new PropertyFilter('user_id', "=", userId))
+    .filter(and([
+      new PropertyFilter('date', '>=', start.toString()),
+      new PropertyFilter('date', '<=', end.toString())
+    ]))
+    .run();
+  return bookings;
 }

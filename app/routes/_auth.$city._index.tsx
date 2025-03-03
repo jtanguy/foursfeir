@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useLoaderData, useParams } from "@remix-run/react";
+import { Form, useLoaderData, useParams } from "@remix-run/react";
 import cx from "classnames";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -144,6 +144,14 @@ export default function Current() {
           />
         );
       })}
+
+
+      <Form className="calendar-day" method="get" action={`/${city}/redirect`}>
+        <fieldset role="group">
+          <input type="date" name="date" />
+          <button type="submit">Go</button>
+        </fieldset>
+      </Form>
     </>
   );
 }

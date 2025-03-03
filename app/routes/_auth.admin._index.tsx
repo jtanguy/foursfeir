@@ -46,7 +46,9 @@ const schema = zfd.formData(
 		z.object({
 			_action: z.literal("create"),
 			label: zfd.text(),
-			slug: zfd.text(z.string().regex(/[a-z0-9-]+/, { message: "Le slug ne peut contenir que des minuscules et des tirets" }).refine(slug => slug !== "admin", { message: "'admin' est un nom réservé" })),
+			slug: zfd.text(z.string()
+				.regex(/[a-z0-9-]+/, { message: "Le slug ne peut contenir que des minuscules et des tirets" })
+				.refine(slug => !["admin", "me"].includes(slug), { message: "Les slug 'admin' et 'me' sont réservés" })),
 			capacity: zfd.numeric(),
 			max_capacity: zfd.numeric(),
 		}),

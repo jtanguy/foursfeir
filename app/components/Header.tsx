@@ -43,6 +43,9 @@ export function Header({ breadcrumbs, user, admin, cities }: HeaderProps) {
 					</span>
 				</summary>
 				<ul dir="ltr">
+					<li>
+						<Link to={"/me"}>Mes réservations</Link>
+					</li>
 					{admin != null && admin.type === "global" &&
 						<Fragment key="admin">
 							<li key="admin.global">
