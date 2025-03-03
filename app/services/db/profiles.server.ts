@@ -30,7 +30,7 @@ export async function getProfile(user_id: string): Promise<Profile> {
 	return res;
 }
 
-export async function getProfiles(): Promise<Profile[][]> {
+export async function getProfiles(): Promise<Profile[]> {
 	const [profiles] = await client.createQuery(KINDS.profile).run()
 	return profiles.map((profile) => ({ ...profile, id: profile[client.KEY].name }))
 }

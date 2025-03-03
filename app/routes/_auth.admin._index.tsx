@@ -9,12 +9,13 @@ import { z } from "zod";
 import { zfd } from "zod-form-data";
 import Avatar from "~/components/Avatar";
 import { DeleteCityConfirm } from "~/components/DeleteCityConfirm";
+import ProfileSearch from "~/components/ProfileSearch";
 import { UpdateAdmin } from "~/components/UpdateAdmin";
 import { getUserFromRequest } from "~/services/auth.server";
 import { Collator } from "~/services/collator.utils";
 import { AdminInfo, createAdmin, deleteAdmin, getAdminTnfo, getAllAdmins, isUserSuperAdmin, updateAdmin } from "~/services/db/admins.server";
 import { createCity, deleteCity, getCities } from "~/services/db/cities.server";
-import { findProfile, profileLoader } from "~/services/db/profiles.server";
+import { profileLoader } from "~/services/db/profiles.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const user = await getUserFromRequest(request)
@@ -55,7 +56,7 @@ const schema = zfd.formData(
 		}),
 		z.object({
 			_action: z.literal("promote"),
-			email: zfd.text(z.string().email().endsWith(env.EMAIL_DOMAIN)),
+			user_id: zfd.text(),
 			global: zfd.checkbox(),
 			local: zfd.repeatableOfType(zfd.text())
 		}),
@@ -92,13 +93,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 		return new Response(null, { status: 202 })
 	}
 	if (f._action === "promote") {
-		const newAdmin = await findProfile(f.email)
 		const allCities = await getCities()
 		const newInfo: AdminInfo = f.global ?
-			{ type: "global", user_id: newAdmin.id }
+			{ type: "global", user_id: f.user_id }
 			:
 			{
-				type: "local", user_id: newAdmin.id, cities: allCities.filter(c => f.local.includes(c.slug))
+				type: "local", user_id: f.user_id, cities: allCities.filter(c => f.local.includes(c.slug))
 			}
 		await createAdmin(newInfo)
 		return new Response(null, { status: 201 });
@@ -219,12 +219,12 @@ export default function AdminIndex() {
 						<summary role="button">Créer un lieu</summary>
 						<Form method="post">
 							<label>
-								URL slug
-								<input type="text" name="slug" />
-							</label>
-							<label>
 								Nom
 								<input type="text" name="label" />
+							</label>
+							<label>
+								URL slug
+								<input type="text" name="slug" />
 							</label>
 							<div className="grid">
 								<label>
@@ -249,8 +249,8 @@ export default function AdminIndex() {
 						<summary role="button">Ajouter des admins</summary>
 						<Form method="post">
 							<label>
-								Email
-								<input type="email" name="email" defaultValue="tanguy.j@sfeir.com" />
+								Utilisateur•ice
+								<ProfileSearch name="user_id" />
 							</label>
 							<div className="grid">
 								<label>

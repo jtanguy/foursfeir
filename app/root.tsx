@@ -10,6 +10,7 @@ import "temporal-polyfill"
 
 import picoStyles from "@picocss/pico/css/pico.min.css?url";
 import globalStyles from "~/styles/global.css?url";
+import profileSearchStyles from "~/styles/profile-search.css?url";
 import { FiGithub } from "react-icons/fi";
 
 export const meta: MetaFunction = () => [
@@ -19,10 +20,12 @@ export const meta: MetaFunction = () => [
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: picoStyles },
   { rel: "stylesheet", href: globalStyles },
+  { rel: "stylesheet", href: profileSearchStyles },
 ];
 
 
 export function Layout({ children }: { children: React.ReactNode }) {
+
 
   return (
     <html lang="en">

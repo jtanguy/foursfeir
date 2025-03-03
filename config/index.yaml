@@ -13,3 +13,7 @@ indexes:
   ancestor: yes
   properties:
   - name: date
+- kind: Booking
+  properties:
+  - name: user_id
+  - name: date

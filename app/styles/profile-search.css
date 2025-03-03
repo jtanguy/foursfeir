@@ -1,0 +1,120 @@
+.combobox-container {
+  position: relative;
+  margin-bottom: var(--pico-spacing);
+}
+
+.combobox-input-container {
+  position: relative;
+  width: 100%;
+  cursor: default;
+  overflow: hidden;
+  border-radius: var(--pico-border-radius);
+  background-color: var(--pico-background-color);
+  text-align: left;
+  border: var(--pico-border-width) solid var(--pico-border-color);
+}
+
+.combobox-input-container:focus-within {
+  --box-shadow: 0 0 0 var(--outline-width) var(--form-element-focus-color);
+  border-color: var(--pico-form-element-active-border-color);
+  box-shadow: var(--pico-box-shadow);
+}
+
+input.combobox-input {
+  margin-bottom: 0;
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.combobox-input:focus {
+  outline: none;
+}
+
+.clear-button {
+  margin: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding-right: 0.5rem;
+  background: none;
+  border: none;
+}
+
+.clear-button:hover {
+  background: none;
+}
+
+.clear-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--pico-muted-color);
+}
+
+.combobox-options {
+  position: absolute;
+  z-index: 50;
+  margin-top: 0.25rem;
+  max-height: 15rem;
+  width: 100%;
+  overflow: auto;
+  border-radius: var(--pico-border-radius);
+  background-color: var(--pico-card-background-color);
+  padding: 0.25rem 0;
+  box-shadow: var(--pico-card-box-shadow);
+  border: var(--pico-border-width) solid var(--pico-card-border-color);
+  font-size: 0.875rem;
+}
+
+.no-results {
+  position: relative;
+  cursor: default;
+  user-select: none;
+  padding: 0.5rem 1rem;
+  color: var(--pico-muted-color);
+}
+.no-results button {
+  margin-left: 0.5rem;
+  margin-bottom: 0;
+}
+
+.combobox-option {
+  position: relative;
+  cursor: default;
+  user-select: none;
+  padding: 0.5rem  1rem;
+  color: var(--pico-color);
+}
+
+.combobox-option[data-focus] {
+  background-color: var(--pico-dropdown-hover-background-color);
+}
+
+.option-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.option-text {
+  display: block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.option-text {
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+
+.transition {
+  transition-property: opacity;
+  transition-duration: 100ms;
+  transition-timing-function: ease-in;
+} 

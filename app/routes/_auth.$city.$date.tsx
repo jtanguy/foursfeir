@@ -31,6 +31,7 @@ import { isProfile, profileLoader, saveProfile } from "~/services/db/profiles.se
 import invariant from "~/services/validation.utils.server";
 import { emailToFoursfeirId } from "~/services/profiles.utils";
 import { Temporal } from "temporal-polyfill";
+import ProfileSearch from "~/components/ProfileSearch";
 
 export const meta: MetaFunction<typeof loader> = ({ data, params }) => [
   { title: `FourSFEIR | ${data?.city.label} | ${params.date}` }
@@ -415,29 +416,8 @@ export default function Current() {
               <legend>J'inscris un/une autre Sferian à sa place</legend>
               <label>
                 Email
-                <input
-                  type="email"
-                  placeholder="example@sfeir.com"
-                  name="for_user"
-                  list="other"
-                  onChange={handleColleagueEmailChange}
-                />
+                <ProfileSearch name="for_user" profileSelector={(p) => p?.email ?? ""} />
               </label>
-              <datalist id="other">
-                {profiles.map((p) => {
-                  return (
-                    <option value={p.email!} key={p.id}>
-                      {p.full_name ?? p.email}
-                    </option>
-                  );
-                })}
-              </datalist>
-              {showNameInput && (
-                <label>
-                  Nom
-                  <input type="text" name="for_user_name" />
-                </label>
-              )}
               <fieldset>
                 <legend>Période</legend>
                 <label>
