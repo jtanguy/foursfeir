@@ -3,9 +3,10 @@ import cx from "classnames";
 import { Profile } from "~/services/db/profiles.server";
 
 type Props = {
-  profile: Profile
+  profile: Profile;
   className?: string;
 };
+
 export default function Avatar({ profile, className }: Props) {
   if (profile.avatar_url != null && profile.avatar_url.length > 0) {
     return (
