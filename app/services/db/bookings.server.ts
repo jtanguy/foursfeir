@@ -33,10 +33,6 @@ export function getOccupancy(bookings: Booking[]): number {
   return Math.max(morning, afternoon);
 }
 
-export function withIndex(booking: Booking, index: number) {
-  return { ...booking, index: index + 1 }
-}
-
 export async function getBookingsFor(citySlug: string, date: string | [string, string], userId?: string): Promise<Booking[]> {
   let ancestorKey
   if (Array.isArray(date)) {
