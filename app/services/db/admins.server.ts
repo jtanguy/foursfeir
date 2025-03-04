@@ -3,7 +3,6 @@ import { client, KINDS } from "./client.server"
 import { City } from "./cities.server"
 
 export type Admin = {
-	city: string,
 	id: string
 }
 
