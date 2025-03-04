@@ -6,11 +6,11 @@ import { IoClose } from "react-icons/io5";
 import { useDebounce } from "@uidotdev/usehooks";
 import Avatar from "./Avatar";
 import { Profile } from "~/services/db/profiles.server";
-import { LuRefreshCw } from "react-icons/lu";
 
 type ProfileSearchProps = {
 	name?: string;
-	profileSelector?: (profile: Profile | null) => string;
+	onChange?: (profile: Profile | { email: string } | null) => void;
+	restrictExisting?: boolean;
 	debug?: boolean;
 };
 
@@ -18,16 +18,23 @@ export type ProfileSearchLoaderData = {
 	profiles: FuseResult<Profile>[];
 };
 
-export default function ProfileSearch({ name = "user_id", profileSelector = (p) => p?.id ?? "", debug = false }: ProfileSearchProps) {
+export default function ProfileSearch({ name, onChange = () => { }, restrictExisting = false, debug = false }: ProfileSearchProps) {
 	const fetcher = useFetcher<ProfileSearchLoaderData>();
 	const [query, setQuery] = useState("");
-	const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+	const [selectedProfile, setSelectedProfileRaw] = useState<Profile | null>(null);
 	const debouncedQuery = useDebounce(query, 300);
+
+	const profileDisplayValue = (p: Profile | null) => p?.full_name ?? p?.email ?? "";
 
 	useEffect(() => {
 		if (debouncedQuery.length <= 2) return;
 		fetcher.submit({ search: debouncedQuery }, { method: "get", action: "/profiles" });
 	}, [debouncedQuery]);
+
+	const setSelectedProfile = (profile: Profile | null) => {
+		setSelectedProfileRaw(profile);
+		onChange(profile);
+	}
 
 	const resetData = new FormData();
 	resetData.set("_action", "refresh");
@@ -35,13 +42,12 @@ export default function ProfileSearch({ name = "user_id", profileSelector = (p) 
 
 	return (
 		<div className="profile-search">
-			<Combobox value={selectedProfile} onChange={setSelectedProfile}>
-				<input type="hidden" name={name} value={profileSelector(selectedProfile)} />
+			<Combobox value={selectedProfile} name={name} onChange={setSelectedProfile}>
 				<div className="combobox-container">
 					<div className="combobox-input-container">
 						<ComboboxInput
 							className="combobox-input"
-							displayValue={(profile: Profile | null) => profile?.full_name ?? ""}
+							displayValue={profileDisplayValue}
 							onChange={(event) => setQuery(event.target.value)}
 							placeholder="Rechercher un profil..."
 							autoComplete="off"
@@ -65,14 +71,7 @@ export default function ProfileSearch({ name = "user_id", profileSelector = (p) 
 						afterLeave={() => setQuery("")}
 					>
 						<ComboboxOptions className="combobox-options">
-							{results.length === 0 && query !== "" ? (
-								<div className="no-results">
-									Aucun résultat trouvé.
-									<button type="button" aria-busy={fetcher.state === "submitting"} onClick={() => fetcher.submit(resetData, { method: "post", action: "/profiles" })}>
-										Rafraîchir
-									</button>
-								</div>
-							) : (
+							{
 								results.map(({ item: profile, score }) => (
 									<ComboboxOption
 										key={profile.id}
@@ -92,6 +91,23 @@ export default function ProfileSearch({ name = "user_id", profileSelector = (p) 
 										</span>
 									</ComboboxOption>
 								))
+							}
+							{query !== "" && !restrictExisting && (
+								<ComboboxOption className="combobox-option" value={{ email: query }}>
+									<span className="option-content">
+										<span className="option-text">
+											Ajouter {query}
+										</span>
+									</span>
+								</ComboboxOption>
+							)}
+							{query !== "" && results.length === 0 && restrictExisting && (
+								<div className="no-results">
+									Aucun résultat trouvé.
+									<button type="button" aria-busy={fetcher.state === "submitting"} onClick={() => fetcher.submit(resetData, { method: "post", action: "/profiles" })}>
+										Rafraîchir
+									</button>
+								</div>
 							)}
 						</ComboboxOptions>
 					</Transition>
