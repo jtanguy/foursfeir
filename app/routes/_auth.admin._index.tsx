@@ -4,7 +4,7 @@ import { Form, Link, useLoaderData } from "@remix-run/react";
 import cx from "classnames"
 import { env } from "config";
 import { useState } from "react";
-import { FaCog, FaUserMinus } from "react-icons/fa";
+import { FaCog, FaUserLock, FaUserMinus } from "react-icons/fa";
 import { LuExternalLink } from "react-icons/lu";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
@@ -229,7 +229,7 @@ export default function AdminIndex() {
 				</div>
 			</div>
 			{isSuperAdmin && <div>
-				<h4>Actions</h4>
+				<h4>Actions <span data-tooltip="Actions réservées aux admins globaux"><FaUserLock /></span></h4>
 				<div className="grid">
 					<details>
 						<summary role="button">Créer un lieu</summary>
@@ -299,7 +299,7 @@ export default function AdminIndex() {
 					</details>
 				</div>
 
-			</div>
+			</div >
 			}
 		</>
 	)
