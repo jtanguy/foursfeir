@@ -64,7 +64,7 @@ const schema = zfd.formData(
 		}),
 		z.object({
 			_action: z.literal("promote"),
-			user_id: zfd.text(z.string().uuid()),
+			"user[id]": zfd.text(z.string().uuid()),
 			global: zfd.checkbox(),
 			local: zfd.repeatableOfType(zfd.text(z.string().min(2).max(50)))
 		}),
@@ -112,10 +112,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 	if (f._action === "promote") {
 		const allCities = await getCities()
 		const newInfo: AdminInfo = f.global ?
-			{ type: "global", user_id: f.user_id }
+			{ type: "global", user_id: f["user[id]"] }
 			:
 			{
-				type: "local", user_id: f.user_id, cities: allCities.filter(c => f.local.includes(c.slug))
+				type: "local", user_id: f["user[id]"], cities: allCities.filter(c => f.local.includes(c.slug))
 			}
 		await createAdmin(newInfo)
 		return new Response(null, { status: 201 });
@@ -266,7 +266,7 @@ export default function AdminIndex() {
 						<Form method="post">
 							<label>
 								Utilisateur•ice
-								<ProfileSearch name="user_id" />
+								<ProfileSearch name="user" restrictExisting />
 							</label>
 							<div className="grid">
 								<label>

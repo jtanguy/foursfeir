@@ -28,7 +28,7 @@ import { isUserAdmin } from "~/services/db/admins.server";
 import { getCity, getNoticeFor } from "~/services/db/cities.server";
 import { createBooking, deleteBooking, getBookingsFor, getOccupancy } from "~/services/db/bookings.server";
 import { Period, isOverflowBooking, periods, groupBookings, indexBookings } from "~/services/bookings.utils";
-import { isProfile, profileLoader, saveProfile } from "~/services/db/profiles.server";
+import { isProfile, Profile, profileLoader, saveProfile } from "~/services/db/profiles.server";
 import invariant from "~/services/validation.utils.server";
 import { emailToFoursfeirId } from "~/services/profiles.utils";
 import { Temporal } from "temporal-polyfill";
@@ -85,8 +85,11 @@ const schema = zfd.formData(
     z.object({
       _action: z.literal("book"),
       period: zfd.text(z.enum(["day", "morning", "afternoon"])),
-      for_user: zfd.text(z.string().email()),
-      for_user_name: zfd.text(z.string().min(2).max(100)).optional(),
+      for_user: z.object({
+        id: zfd.text(z.string().uuid()).optional(),
+        email: zfd.text(z.string().email()),
+        full_name: zfd.text(z.string().min(2).max(100)),
+      }),
     }),
     z.object({
       _action: z.literal("invite"),
@@ -99,7 +102,7 @@ const schema = zfd.formData(
     }),
     z.object({
       _action: z.literal("remove"),
-      booking_id: zfd.numeric(),
+      booking_id: zfd.text(z.string().max(100)),
     }),
   ])
 );
@@ -114,7 +117,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   if (f._action === "book") {
 
     if (f.for_user) {
-      const otherId = emailToFoursfeirId(f.for_user);
+      const otherId = f.for_user.id ?? emailToFoursfeirId(f.for_user.email);
       const other = await profileLoader.load(otherId)
 
       if (other == null) {
@@ -122,8 +125,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         // Create profile on the fly
         await saveProfile({
           id: otherId,
-          email: f.for_user,
-          full_name: f.for_user_name ?? f.for_user,
+          email: f.for_user.email,
+          full_name: f.for_user.full_name,
         })
       }
 
@@ -204,8 +207,8 @@ export default function Current() {
   const deleteFetcher = useFetcher();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const sortSchema = z.enum(["created_at", "period"]).nullable().default("period")
-  const sort = sortSchema.parse(searchParams.get("sort"))
+  const sortSchema = z.enum(["created_at", "period"]).nullable()
+  const sort = sortSchema.safeParse(searchParams.get("sort")).data ?? "period"
 
   const day = Temporal.PlainDate.from(dateStr!);
   const today = Temporal.Now.plainDateISO()
@@ -225,16 +228,11 @@ export default function Current() {
     setSelfPeriod(event.target.value as Period);
   };
 
-  const handleColleagueEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const emailStr = event.target.value.trim();
-    const isEmailLike = emailStr.includes("@");
-    const profileExists =
-      profiles.some((p) => p.email.startsWith(emailStr));
-
-    if (isEmailLike && !profileExists) {
-      setShowNameInput(true);
-    } else {
+  const handleColleagueEmailChange = (profileOrEmail: Profile | { email: string } | null) => {
+    if (profileOrEmail == null || "id" in profileOrEmail) {
       setShowNameInput(false);
+    } else {
+      setShowNameInput(true);
     }
   };
 
@@ -509,12 +507,12 @@ export default function Current() {
               <legend>J'inscris un/une autre Sferian à sa place</legend>
               <label>
                 Email
-                <ProfileSearch name="for_user" profileSelector={(p) => p?.email ?? ""} />
+                <ProfileSearch name="for_user" onChange={handleColleagueEmailChange} />
               </label>
               {showNameInput && (
                 <label>
                   Nom
-                  <input type="text" name="for_user_name" />
+                  <input type="text" name="for_user[full_name]" />
                 </label>
               )}
               <fieldset>

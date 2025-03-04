@@ -1,6 +1,34 @@
 import DataLoader from "dataloader";
-import { KINDS, client } from "./client.server"
+import { KINDS, client, Entity } from "./client.server"
 import { emailToFoursfeirId } from "../profiles.utils";
+import Fuse from "fuse.js";
+
+let fuseInstance: Fuse<Profile> | null = null;
+
+export async function getFuseInstance(): Promise<Fuse<Profile>> {
+	if (!fuseInstance) {
+		const profiles = await getProfiles();
+		setFuseInstance(profiles);
+	}
+	if (!fuseInstance) {
+		throw new Error("Failed to initialize Fuse instance");
+	}
+	return fuseInstance;
+}
+
+function setFuseInstance(profiles: Profile[]) {
+	fuseInstance = new Fuse(profiles, {
+		includeScore: true,
+		keys: [
+			{ name: "full_name" },
+			{ name: "email", getFn: (p) => p.email.split("@")[0] },
+		],
+	});
+}
+
+export function invalidateFuseInstance() {
+	fuseInstance = null;
+}
 
 export type Profile = {
 	id: string,
@@ -14,7 +42,7 @@ export function isProfile(p: Profile | Error | null): p is Profile {
 
 export const profileLoader = new DataLoader(async (userIds: ReadonlyArray<string>) => {
 	const [results] = await client.get(userIds.map(u => client.key([KINDS.profile, u])))
-	const profiles = results.map(raw => ({ ...raw, id: raw[client.KEY].name }))
+	const profiles = results.map((raw: Entity<Profile>) => ({ ...raw, id: raw[client.KEY].name }))
 	return userIds.map(u => (profiles as Profile[]).find(p => p.id === u) ?? null)
 })
 
@@ -36,5 +64,8 @@ export async function getProfiles(): Promise<Profile[]> {
 }
 
 export function saveProfile(profile: Profile) {
-	return client.save({ key: client.key([KINDS.profile, emailToFoursfeirId(profile.email)]), data: profile })
+	if (fuseInstance != null) {
+		fuseInstance.add(profile)
+	}
+	return client.save({ key: client.key([KINDS.profile, profile.id]), data: profile })
 }
