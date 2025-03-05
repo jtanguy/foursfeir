@@ -420,8 +420,8 @@ export default function Current() {
           <Form method="post">
             <input type="hidden" name="_action" value="invite" />
             <fieldset className="guest-form">
-              <legend>Je m'inscris avec des +1</legend>
-              <fieldset>
+              <legend>Je m'inscris</legend>
+              <fieldset role="group">
                 <legend>Mon inscription</legend>
                 <label>
                   <input
@@ -455,49 +455,52 @@ export default function Current() {
                 </label>
               </fieldset>
 
-              <fieldset>
-                <legend>Invités/invitées</legend>
-                <label>
-                  Journée
-                  <input
-                    type="number"
-                    name="guests.day"
-                    min="0"
-                    max={capacity - occupancy}
-                    defaultValue={selfBooking?.guests?.day ?? 0}
-                    disabled={selfPeriod !== "day"}
-                  />
-                </label>
-                <label>
-                  Matin
-                  <input
-                    type="number"
-                    name="guests.morning"
-                    min="0"
-                    max={capacity - occupancy}
-                    defaultValue={selfBooking?.guests?.morning ?? 0}
-                    disabled={selfPeriod === "afternoon"}
-                  />
-                </label>
-                <label>
-                  Après-midi
-                  <input
-                    type="number"
-                    name="guests.afternoon"
-                    min="0"
-                    max={capacity - occupancy}
-                    defaultValue={selfBooking?.guests?.afternoon ?? 0}
-                    disabled={selfPeriod === "morning"}
-                  />
-                </label>
-              </fieldset>
+              <details>
+                <summary>J'ai des invités/invitées avec moi</summary>
+                <fieldset role="group">
+                  <legend>Invités/invitées</legend>
+                  <label>
+                    Journée
+                    <input
+                      type="number"
+                      name="guests.day"
+                      min="0"
+                      max={capacity - occupancy}
+                      defaultValue={selfBooking?.guests?.day ?? 0}
+                      disabled={selfPeriod !== "day"}
+                    />
+                  </label>
+                  <label>
+                    Matin
+                    <input
+                      type="number"
+                      name="guests.morning"
+                      min="0"
+                      max={capacity - occupancy}
+                      defaultValue={selfBooking?.guests?.morning ?? 0}
+                      disabled={selfPeriod === "afternoon"}
+                    />
+                  </label>
+                  <label>
+                    Après-midi
+                    <input
+                      type="number"
+                      name="guests.afternoon"
+                      min="0"
+                      max={capacity - occupancy}
+                      defaultValue={selfBooking?.guests?.afternoon ?? 0}
+                      disabled={selfPeriod === "morning"}
+                    />
+                  </label>
+                </fieldset>
+              </details>
 
               <button
                 type="submit"
                 disabled={isFull}
                 aria-busy={navigation.state === "submitting"}
               >
-                Inscrire
+                M'inscrire
               </button>
             </fieldset>
           </Form>
@@ -515,7 +518,7 @@ export default function Current() {
                   <input type="text" name="for_user[full_name]" />
                 </label>
               )}
-              <fieldset>
+              <fieldset role="group">
                 <legend>Période</legend>
                 <label>
                   <input
