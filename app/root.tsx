@@ -6,16 +6,14 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-import "temporal-polyfill"
+import "temporal-polyfill";
 
 import picoStyles from "@picocss/pico/css/pico.min.css?url";
 import globalStyles from "~/styles/global.css?url";
 import profileSearchStyles from "~/styles/profile-search.css?url";
 import { FiGithub } from "react-icons/fi";
 
-export const meta: MetaFunction = () => [
-  { title: "FourSFEIR" }
-]
+export const meta: MetaFunction = () => [{ title: "FourSFEIR" }];
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: picoStyles },
@@ -23,10 +21,7 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: profileSearchStyles },
 ];
 
-
 export function Layout({ children }: { children: React.ReactNode }) {
-
-
   return (
     <html lang="en">
       <head>
@@ -52,11 +47,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <ScrollRestoration />
         <Scripts />
       </body>
-    </html >
+    </html>
   );
 }
-
-
 
 export default function App() {
   return <Outlet />;

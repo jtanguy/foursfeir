@@ -1,6 +1,6 @@
 import cx from "classnames";
 
-import { Profile } from "~/services/db/profiles.server";
+import { Profile } from "~/services/domain/profile.interface";
 
 type Props = {
   profile: Profile;

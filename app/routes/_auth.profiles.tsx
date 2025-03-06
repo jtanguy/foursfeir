@@ -1,9 +1,9 @@
 import { ActionFunctionArgs, json, LoaderFunctionArgs } from "@remix-run/node";
 import z from "zod";
 import { getUserFromRequest } from "~/services/auth.server";
-import { getFuseInstance, invalidateFuseInstance } from "~/services/db/profiles.server";
 import { ProfileSearchLoaderData } from "~/components/ProfileSearch";
 import { zfd } from "zod-form-data";
+import { profileService } from "~/services/application/services.server";
 
 const schema = z.string().trim().min(2).max(50).nullable();
 
@@ -16,8 +16,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     return json<ProfileSearchLoaderData>({ profiles: [] });
   }
 
-  const fuseInstance = await getFuseInstance();
-  const candidates = fuseInstance.search(query);
+  const candidates = await profileService.searchProfiles(query);
 
   return json<ProfileSearchLoaderData>({
     profiles: candidates,
@@ -31,10 +30,10 @@ const actionSchema = zfd.formData({
 export const action = async ({ request }: ActionFunctionArgs) => {
   await getUserFromRequest(request);
 
-  const f = actionSchema.parse(await request.formData());
-  console.log("Invalidation fuse profiles")
+  actionSchema.parse(await request.formData());
+  console.log("Invalidation fuse profiles");
 
-  invalidateFuseInstance();
+  profileService.clearProfileCache();
 
   return new Response(null, { status: 204 });
 };

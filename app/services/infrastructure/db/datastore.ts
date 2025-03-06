@@ -1,6 +1,15 @@
 import { Datastore, Key } from "@google-cloud/datastore";
 import { env } from "config";
 
+export const KINDS = {
+	city: "City",
+	date: "Date",
+	booking: "Booking",
+	profile: "Profile",
+	admin: "Admin",
+	notice: "Notice",
+} as const;
+
 /**
  * Entity is a type that extends a type T with a key property.
  * The datastore client does not properly type the entities, so we need to use this type.
@@ -25,12 +34,3 @@ export const client = new Datastore(
 			},
 			...common
 		} : common)
-
-export const KINDS = {
-	profile: 'Profile',
-	admin: 'Admin',
-	city: 'City',
-	date: 'Date',
-	notice: 'Notice',
-	booking: 'Booking',
-} as const;

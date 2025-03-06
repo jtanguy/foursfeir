@@ -2,11 +2,11 @@ import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 import { getUserFromRequest } from "~/services/auth.server";
-import { getCities } from "~/services/db/cities.server";
+import { cityService } from "~/services/application/services.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await getUserFromRequest(request)
-  const cities = await getCities()
+  await getUserFromRequest(request);
+  const cities = await cityService.getCities();
 
   return json({
     cities: cities ?? [],

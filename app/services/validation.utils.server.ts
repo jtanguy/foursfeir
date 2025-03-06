@@ -6,7 +6,7 @@ export default function invariant(
    * the message takes a fair amount of effort to compute
    */
   message: string,
-  throwType: "error" | "response" = "response"
+  throwType: "error" | "response" = "response",
 ): asserts condition {
   if (condition) {
     return;
@@ -17,5 +17,5 @@ export default function invariant(
   if (throwType == "error") {
     throw new Error(message);
   }
-  throw new Response(message, { status: 400 })
+  throw new Response(message, { status: 400 });
 }

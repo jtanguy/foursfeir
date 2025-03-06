@@ -1,4 +1,5 @@
 import { createCookieSessionStorage } from "@remix-run/node";
+import { env } from "config";
 
 // export the whole sessionStorage object
 export const sessionStorage = createCookieSessionStorage({
@@ -7,7 +8,7 @@ export const sessionStorage = createCookieSessionStorage({
     sameSite: "lax", // this helps with CSRF
     path: "/", // remember to add this so the cookie will work in all routes
     httpOnly: true, // for security reasons, make this cookie http only
-    secrets: ["s3cr3t"], // replace this with an actual secret
+    secrets: [env.SESSION_SECRET], // replace this with an actual secret
     secure: process.env.NODE_ENV === "production", // enable this in prod only
   },
 });

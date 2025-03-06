@@ -5,9 +5,15 @@ import { BsPlusCircleDotted } from "react-icons/bs";
 
 import Avatar from "./Avatar";
 import { Fragment } from "react";
-import { IndexedBooking, periods, groupBookings, Period, isOverflowBooking } from "~/services/bookings.utils";
-import { Profile } from "~/services/db/profiles.server";
-import { emailToFoursfeirId } from "~/services/profiles.utils";
+import {
+  IndexedBooking,
+  periods,
+  groupBookings,
+  Period,
+  isOverflowBooking,
+} from "~/services/domain/booking.interface";
+import { Profile } from "~/services/domain/profile.interface";
+import { emailToFoursfeirId } from "~/services/domain/profile.interface";
 
 type Props = {
   date: Temporal.PlainDate;
@@ -34,10 +40,12 @@ export function CalendarDay({
 }: Props) {
   const fetcher = useFetcher();
 
-  const self = bookings.find((p) => emailToFoursfeirId(p.profile?.email) === userId);
+  const self = bookings.find(
+    (p) => emailToFoursfeirId(p.profile?.email) === userId,
+  );
   const hasBooking = self != null;
 
-  const byPeriod = groupBookings(bookings)
+  const byPeriod = groupBookings(bookings);
 
   const today = Temporal.Now.plainDateISO();
   const isToday = Temporal.PlainDate.compare(date, today) === 0;
@@ -46,7 +54,6 @@ export function CalendarDay({
   const isSubmitting = fetcher.state !== "idle";
 
   const selfFormId = `${date.toString()}-self`;
-
 
   const isVisuallyFull = occupancy >= capacity;
   const isFull = occupancy >= maxCapacity;
@@ -61,7 +68,7 @@ export function CalendarDay({
           "calendar-day--full": isVisuallyFull,
           "calendar-day--today": isToday,
         },
-        className
+        className,
       )}
       aria-busy={isSubmitting}
     >
@@ -77,7 +84,13 @@ export function CalendarDay({
         <div>
           {isFuture && (
             <fetcher.Form method="post" id={selfFormId}>
-              {self && (<input type="hidden" name="booking_id" value={self.booking_id} />)}
+              {self && (
+                <input
+                  type="hidden"
+                  name="user_id"
+                  value={self.user_id}
+                />
+              )}
               <input type="hidden" name="date" value={date.toString()} />
               <input
                 type="hidden"
@@ -90,11 +103,11 @@ export function CalendarDay({
             <summary className="calendar-people__header">
               <ul className="calendar-people__list calendar-people__list--inline">
                 {bookings.map((booking) => {
-                  const isOverflow = isOverflowBooking(booking, capacity)
+                  const isOverflow = isOverflowBooking(booking, capacity);
                   const overflowStr = isOverflow ? " (Surnuméraire)" : "";
                   return (
                     <li
-                      key={booking.profile?.id}
+                      key={booking.user_id}
                       data-tooltip={`${booking.profile?.full_name ?? booking.profile?.email
                         } - ${periods[booking.period]}${overflowStr}`}
                     >
@@ -134,15 +147,15 @@ export function CalendarDay({
                       key={period}
                     >
                       {bookings.map((booking) => {
-                        const isOverflow = isOverflowBooking(booking, capacity)
+                        const isOverflow = isOverflowBooking(booking, capacity);
                         const guestsString = formatter.format(
                           Object.entries(booking.guests)
                             .filter((p) => p[1] > 0)
-                            .map((p) => `${p[1]} ${periods[p[0] as Period]}`)
+                            .map((p) => `${p[1]} ${periods[p[0] as Period]}`),
                         );
-                        const { profile } = booking
+                        const { profile } = booking;
                         return (
-                          <li key={profile?.id}>
+                          <li key={profile?.user_id}>
                             <Avatar
                               className={cx({
                                 "avatar--partial": period !== "day",
@@ -172,59 +185,52 @@ export function CalendarDay({
                     >
                       Se désinscrire
                     </button>
+                  ) : isFull ? (
+                    <button disabled className="calendar-people__book-self">
+                      Capacité atteinte
+                    </button>
                   ) : (
-                    isFull ? (
-
-                      <button
-                        disabled
-                        className="calendar-people__book-self"
-                      >
-                        Capacité atteinte
-                      </button>
-                    ) :
-                      <details className="dropdown">
-                        <summary role="button">
-                          S&apos;inscrire
-                        </summary>
-                        <ul>
-                          <li>
-                            <button
-                              type="submit"
-                              form={selfFormId}
-                              name="period"
-                              value="day"
-                              className="inline-button no-button calendar-people__book-self"
-                              disabled={isFull}
-                            >
-                              Journée
-                            </button>
-                          </li>
-                          <li>
-                            <button
-                              type="submit"
-                              form={selfFormId}
-                              name="period"
-                              value="morning"
-                              className="inline-button no-button calendar-people__book-self"
-                              disabled={isFull}
-                            >
-                              Matin
-                            </button>
-                          </li>
-                          <li>
-                            <button
-                              type="submit"
-                              form={selfFormId}
-                              name="period"
-                              value="afternoon"
-                              className="inline-button no-button calendar-people__book-self"
-                              disabled={isFull}
-                            >
-                              Après-midi
-                            </button>
-                          </li>
-                        </ul>
-                      </details>
+                    <details className="dropdown">
+                      <summary role="button">S&apos;inscrire</summary>
+                      <ul>
+                        <li>
+                          <button
+                            type="submit"
+                            form={selfFormId}
+                            name="period"
+                            value="day"
+                            className="inline-button no-button calendar-people__book-self"
+                            disabled={isFull}
+                          >
+                            Journée
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            type="submit"
+                            form={selfFormId}
+                            name="period"
+                            value="morning"
+                            className="inline-button no-button calendar-people__book-self"
+                            disabled={isFull}
+                          >
+                            Matin
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            type="submit"
+                            form={selfFormId}
+                            name="period"
+                            value="afternoon"
+                            className="inline-button no-button calendar-people__book-self"
+                            disabled={isFull}
+                          >
+                            Après-midi
+                          </button>
+                        </li>
+                      </ul>
+                    </details>
                   )}
                 </div>
               )}
@@ -238,6 +244,6 @@ export function CalendarDay({
         max={capacity}
         className="calendar-day__gauge"
       />
-    </article >
+    </article>
   );
 }

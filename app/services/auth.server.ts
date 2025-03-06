@@ -1,8 +1,8 @@
 import { Authenticator } from "remix-auth";
 import { GoogleStrategy } from "remix-auth-google";
 import { sessionStorage } from "~/services/session.server";
-import { Profile } from "./db/profiles.server";
-import { emailToFoursfeirId } from "./profiles.utils";
+import { Profile } from "./domain/profile.interface";
+import { emailToFoursfeirId } from "./domain/profile.interface";
 import { env } from "config";
 
 // Create an instance of the authenticator, pass a generic with what
@@ -13,26 +13,23 @@ const googleStrategy = new GoogleStrategy<Profile>(
   {
     clientID: env.GOOGLE_AUTH_ID,
     clientSecret: env.GOOGLE_AUTH_SECRET,
-    callbackURL: env.GOOGLE_AUTH_CALLBACK_URL,
+    callbackURL: `${env.BASE_URL ?? env.VERCEL_URL ?? "http://localhost:3000"}/auth/callback`,
   },
   async ({ profile }) => {
-    // Get the user data from your DB or API using the tokens and profile
-    // return User.findOrCreate({ email: profile.emails[0].value })
+    // Profule data is extracted from the Google profile. It is persisted on the first booking
     const foursfeirProfile = {
-      id: emailToFoursfeirId(profile.emails[0].value),
+      user_id: emailToFoursfeirId(profile.emails[0].value),
       avatar_url: profile.photos.at(0)?.value,
       email: profile.emails[0].value,
       full_name: profile.displayName,
-      updatedAt: new Date()
-    }
-    return foursfeirProfile
-  }
-)
-authenticator.use(googleStrategy)
+    };
+    return foursfeirProfile;
+  },
+);
+authenticator.use(googleStrategy);
 
 function getUserFromRequest(request: Request): Promise<Profile> {
-  return authenticator.isAuthenticated(request, { failureRedirect: '/login' })
+  return authenticator.isAuthenticated(request, { failureRedirect: "/login" });
 }
 
-
-export { authenticator, getUserFromRequest }
+export { authenticator, getUserFromRequest };

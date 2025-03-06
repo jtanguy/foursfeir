@@ -1,5 +1,9 @@
 import { Temporal } from "temporal-polyfill";
-import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import type {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  MetaFunction,
+} from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Link, Form, useLoaderData } from "@remix-run/react";
 import { FiPlus, FiTrash } from "react-icons/fi";
@@ -7,18 +11,17 @@ import { RouteMatch } from "react-router";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
 import { getUserFromRequest } from "~/services/auth.server";
-import { isUserAdmin } from "~/services/db/admins.server";
-import { createNotice, deleteNotice, getAllNotices, getCity, updateCity } from "~/services/db/cities.server";
+import { adminService, cityService } from "~/services/application/services.server";
 import invariant from "~/services/validation.utils.server";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => [
-  { title: `FourSFEIR Admin | ${data?.city.label}` }
-]
+  { title: `FourSFEIR Admin | ${data?.city.label}` },
+];
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  invariant(params.city, 'No city given')
-  const user = await getUserFromRequest(request)
-  const isAdmin = await isUserAdmin(user.id, params.city)
+  invariant(params.city, "No city given");
+  const user = await getUserFromRequest(request);
+  const isAdmin = await adminService.isUserAdmin(user.user_id, params.city);
 
   if (!isAdmin) {
     throw redirect(`/${params.city}`);
@@ -27,58 +30,66 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const today = Temporal.Now.plainDateISO();
   const start = today.subtract({ weeks: 1, days: today.dayOfWeek - 1 });
 
-  const [notices, city] = await Promise.all([getAllNotices(params.city, start.toString()), getCity(params.city)])
+  const [notices, city] = await Promise.all([
+    cityService.getNotices(params.city, { after: start }),
+    cityService.getCity(params.city),
+  ]);
 
   return json({
     notices: notices ?? [],
-    city: city
+    city: city,
   });
 };
 
-const schema = zfd.formData(
-  z.discriminatedUnion("_action", [
-    z.object({
-      _action: z.literal("create"),
-      date: zfd.text(z.string().date()),
-      message: zfd.text(z.string().min(1).max(500)),
-      temp_capacity: zfd.numeric(z.number().int().min(0)).optional(),
-    }),
-    z.object({
-      _action: z.literal("delete"),
-      date: zfd.text(z.string().date()),
-    }),
-    z.object({
-      _action: z.literal("update"),
-      label: zfd.text(z.string().min(1).max(100)),
-      capacity: zfd.numeric(z.number().int().min(0)),
-      max_capacity: zfd.numeric(z.number().int().min(0))
-    })
-  ])
-).refine((data) => data._action !== "update" || data.capacity <= data.max_capacity, {
-  message: "La capacité max doit être supérieure à la capacité",
-  path: ["capacity"]
-});
+const schema = zfd
+  .formData(
+    z.discriminatedUnion("_action", [
+      z.object({
+        _action: z.literal("create"),
+        date: zfd.text(z.string().date().transform((d) => Temporal.PlainDate.from(d))),
+        message: zfd.text(z.string().min(1).max(500)),
+        temp_capacity: zfd.numeric(z.number().int().min(0)).optional(),
+      }),
+      z.object({
+        _action: z.literal("delete"),
+        date: zfd.text(z.string().date().transform((d) => Temporal.PlainDate.from(d))),
+      }),
+      z.object({
+        _action: z.literal("update"),
+        label: zfd.text(z.string().min(1).max(100)),
+        capacity: zfd.numeric(z.number().int().min(0)),
+        max_capacity: zfd.numeric(z.number().int().min(0)),
+      }),
+    ]),
+  )
+  .refine(
+    (data) => data._action !== "update" || data.capacity <= data.max_capacity,
+    {
+      message: "La capacité max doit être supérieure à la capacité",
+      path: ["capacity"],
+    },
+  );
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  invariant(params.city, 'No city given')
-  const user = await getUserFromRequest(request)
-  const isAdmin = await isUserAdmin(user.id, params.city)
-  if (!isAdmin) throw new Response("Forbidden", { status: 403 })
+  invariant(params.city, "No city given");
+  const user = await getUserFromRequest(request);
+  const isAdmin = await adminService.isUserAdmin(user.user_id, params.city);
+  if (!isAdmin) throw new Response("Forbidden", { status: 403 });
 
   const f = schema.parse(await request.formData());
 
   if (f._action === "create") {
-    const { _action, ...data } = f
-    await createNotice({ city: params.city, ...data })
+    const { _action, ...data } = f;
+    await cityService.createNotice({ city: params.city, ...data });
     return new Response(null, { status: 201 });
   }
   if (f._action === "delete") {
-    await deleteNotice({ city: params.city, date: f.date })
+    await cityService.deleteNotice(params.city, f.date);
     return new Response(null, { status: 202 });
   }
   if (f._action === "update") {
-    const { _action, ...data } = f
-    await updateCity(params.city, data)
+    const { _action, ...data } = f;
+    await cityService.updateCity(params.city, data);
     return new Response(null, { status: 201 });
   }
 };
@@ -101,10 +112,18 @@ export default function CityAdmin() {
         <tbody>
           {notices.map((notice) => (
             <tr key={notice.date}>
-              <th scope="row"><Link to={`/${city.slug}/${notice.date}`}>{notice.date}</Link></th>
+              <th scope="row">
+                <Link to={`/${city.slug}/${notice.date}`}>{notice.date}</Link>
+              </th>
               <td>{notice.message}</td>
               <td>
-                {notice.temp_capacity != null ? <>{notice.temp_capacity}/{city.max_capacity} (limite dure)</> : <>{city.capacity} (flexible, par défaut)</>}
+                {notice.temp_capacity != null ? (
+                  <>
+                    {notice.temp_capacity}/{city.max_capacity} (limite dure)
+                  </>
+                ) : (
+                  <>{city.capacity} (flexible, par défaut)</>
+                )}
               </td>
               <td>
                 <Form method="post" className="admin-form">
@@ -165,18 +184,25 @@ export default function CityAdmin() {
               <div className="grid">
                 <label>
                   Capacité normale
-                  <input type="number" min="0" name="capacity" defaultValue={city.capacity} />
+                  <input
+                    type="number"
+                    min="0"
+                    name="capacity"
+                    defaultValue={city.capacity}
+                  />
                 </label>
                 <label>
                   Capacité max
-                  <input type="number" min="0" name="max_capacity" defaultValue={city.max_capacity} />
+                  <input
+                    type="number"
+                    min="0"
+                    name="max_capacity"
+                    defaultValue={city.max_capacity}
+                  />
                 </label>
               </div>
 
-              <button
-                name="_action"
-                value="update"
-              >
+              <button name="_action" value="update">
                 Mettre à jour
               </button>
             </Form>
@@ -188,5 +214,7 @@ export default function CityAdmin() {
 }
 
 export const handle = {
-  breadcrumb: (match: RouteMatch) => <Link to={match.pathname}>{match.params.city}</Link>,
+  breadcrumb: (match: RouteMatch) => (
+    <Link to={match.pathname}>{match.params.city}</Link>
+  ),
 };
