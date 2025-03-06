@@ -22,13 +22,13 @@ module.exports = {
   ignorePatterns: ["!**/.server", "!**/.client"],
 
   // Base config
-  extends: ["eslint:recommended"],
+  extends: ["eslint:recommended", "plugin:prettier/recommended"],
 
   overrides: [
     // React
     {
       files: ["**/*.{js,jsx,ts,tsx}"],
-      plugins: ["react", "jsx-a11y"],
+      plugins: ["react", "jsx-a11y", "prettier"],
       extends: [
         "plugin:react/recommended",
         "plugin:react/jsx-runtime",
@@ -75,10 +75,10 @@ module.exports = {
         "@typescript-eslint/no-unused-vars": [
           "error",
           {
-            "ignoreRestSiblings": true
-          }
-        ]
-      }
+            ignoreRestSiblings: true,
+          },
+        ],
+      },
     },
 
     // Node

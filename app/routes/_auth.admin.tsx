@@ -2,9 +2,7 @@ import { MetaFunction } from "@remix-run/node";
 import { Link, Outlet } from "@remix-run/react";
 import { RouteMatch } from "react-router";
 
-export const meta: MetaFunction = () => [
-  { title: "FourSFEIR Admin" }
-]
+export const meta: MetaFunction = () => [{ title: "FourSFEIR Admin" }];
 
 export default function AdminLayout() {
   return (
