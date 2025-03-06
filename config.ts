@@ -10,6 +10,9 @@ export const env = createEnv({
     NAMESPACE: z.string().min(1).max(100).optional(),
 
     SESSION_SECRET: z.string().min(1),
+    BASE_URL: z.string().optional(),
+    VERCEL_URL: z.string().optional(),
+
     // For Datastore
     GCP_SERVICE_ACCOUNT_EMAIL: z.string().email().optional(),
     GCP_PRIVATE_KEY: z.string().min(1).optional(),
@@ -18,7 +21,6 @@ export const env = createEnv({
     // Oauth
     GOOGLE_AUTH_ID: z.string().min(1),
     GOOGLE_AUTH_SECRET: z.string().min(1),
-    GOOGLE_AUTH_CALLBACK_URL: z.string().url(),
   },
   runtimeEnv: process.env,
 });

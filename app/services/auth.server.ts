@@ -13,7 +13,7 @@ const googleStrategy = new GoogleStrategy<Profile>(
   {
     clientID: env.GOOGLE_AUTH_ID,
     clientSecret: env.GOOGLE_AUTH_SECRET,
-    callbackURL: env.GOOGLE_AUTH_CALLBACK_URL,
+    callbackURL: `${env.BASE_URL ?? env.VERCEL_URL ?? "http://localhost:3000"}/auth/callback`,
   },
   async ({ profile }) => {
     // Profule data is extracted from the Google profile. It is persisted on the first booking
