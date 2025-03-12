@@ -6,8 +6,12 @@
   vertical-align: middle;
 }
 
-.guest-form, .colleague-form {
+.guest-form,
+.colleague-form {
+  height: 100%;
   border: 1px solid;
   padding-inline: 1em;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
-

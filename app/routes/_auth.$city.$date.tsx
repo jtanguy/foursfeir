@@ -517,11 +517,13 @@ export default function Current() {
             <input type="hidden" name="_action" value="book" />
             <fieldset className="colleague-form">
               <legend>J&apos;inscris un/une autre Sferian à sa place</legend>
-              <label htmlFor="colleague-email">Email</label>
-              <ProfileSearch
-                name="for_user"
-                onChange={handleColleagueEmailChange}
-              />
+              <label htmlFor="colleague-email">
+                Email
+                <ProfileSearch
+                  name="for_user"
+                  onChange={handleColleagueEmailChange}
+                />
+              </label>
               {showNameInput && (
                 <div>
                   <label htmlFor="colleague-name">Nom</label>
