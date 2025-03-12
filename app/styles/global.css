@@ -1,15 +1,15 @@
 .sr-only {
-	border: 0 !important;
-	clip: rect(1px, 1px, 1px, 1px) !important; /* 1 */
-	-webkit-clip-path: inset(50%) !important;
-		clip-path: inset(50%) !important;  /* 2 */
-	height: 1px !important;
-	margin: -1px !important;
-	overflow: hidden !important;
-	padding: 0 !important;
-	position: absolute !important;
-	width: 1px !important;
-	white-space: nowrap !important;            /* 3 */
+  border: 0 !important;
+  clip: rect(1px, 1px, 1px, 1px) !important; /* 1 */
+  -webkit-clip-path: inset(50%) !important;
+  clip-path: inset(50%) !important; /* 2 */
+  height: 1px !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  width: 1px !important;
+  white-space: nowrap !important; /* 3 */
 }
 
 body {
@@ -41,6 +41,11 @@ body {
   color: var(--color);
 }
 
+.header-user li ul {
+  margin-block: 0;
+  padding-inline-start: 0;
+}
+
 details.dropdown.header-user ul li::after {
   content: unset;
 }
@@ -57,7 +62,7 @@ details.dropdown.header-user ul li::after {
   border-radius: 50%;
   vertical-align: text-top;
 }
-.avatar--huge{
+.avatar--huge {
   --avatar-size: 5rem;
 }
 
@@ -79,10 +84,10 @@ button.icon {
 button.icon:hover,
 button.icon:active,
 button.icon:focus {
-  --color: var(--contrast)
+  --color: var(--contrast);
 }
-button.danger{
-  --color: var(--pico-del-color)
+button.danger {
+  --color: var(--pico-del-color);
 }
 
 .hero--axolotl-blue {
@@ -126,7 +131,7 @@ main.container {
   border-inline-start: 0.2rem solid var(--pico-primary-hover);
 }
 
-.calendar-day--end-of-week+.calendar-day {
+.calendar-day--end-of-week + .calendar-day {
   margin-block-start: 3em;
 }
 
@@ -165,7 +170,6 @@ form.inline-form {
   display: flex;
   justify-content: space-around;
   align-items: center;
-
 }
 
 .calendar-day__actions ul {
@@ -183,7 +187,7 @@ form.inline-form {
 .no-button:hover,
 .no-button:active,
 .no-button:focus {
-  --color: var(--contrast)
+  --color: var(--contrast);
 }
 
 button.inline-button {
@@ -205,7 +209,7 @@ button.inline-button {
   }
 }
 
-details.calendar-people[open]>*:not(summary) {
+details.calendar-people[open] > *:not(summary) {
   animation: details-show 150ms ease-out;
 }
 
@@ -223,7 +227,7 @@ details.calendar-people[open]>*:not(summary) {
 
 .avatar--overflow {
   --color: var(--pico-del-color);
-  border: 2px dotted var(--color)
+  border: 2px dotted var(--color);
 }
 
 .avatar--partial {
@@ -259,7 +263,7 @@ details.calendar-people[open]>*:not(summary) {
   list-style: none;
 }
 
-.calendar-people__list .avatar+span {
+.calendar-people__list .avatar + span {
   margin-inline-start: 1ex;
 }
 
@@ -268,7 +272,7 @@ details.calendar-people[open]>*:not(summary) {
   border-bottom: none;
 }
 
-.calendar-people__list--inline li+li {
+.calendar-people__list--inline li + li {
   margin-inline-start: -0.5ex;
 }
 
