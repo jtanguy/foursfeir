@@ -66,8 +66,8 @@ export class DatastoreCityService implements CityService {
 	}
 
 	async createNotice(notice: Omit<Notice, "created_at">): Promise<void> {
-		const key = this.client.key([KINDS.city, notice.city, KINDS.notice]);
-		await this.client.save({ key, data: notice });
+		const key = this.client.key([KINDS.city, notice.city, KINDS.notice, notice.date.toString()]);
+		await this.client.save({ key, data: { ...notice, date: notice.date.toString(), created_at: Temporal.Now.instant().toString() } });
 	}
 
 	async deleteNotice(citySlug: string, date: Temporal.PlainDate): Promise<void> {

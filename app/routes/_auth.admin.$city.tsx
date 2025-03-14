@@ -48,7 +48,7 @@ const schema = zfd
         _action: z.literal("create"),
         date: zfd.text(z.string().date().transform((d) => Temporal.PlainDate.from(d))),
         message: zfd.text(z.string().min(1).max(500)),
-        temp_capacity: zfd.numeric(z.number().int().min(0)).optional(),
+        temp_capacity: zfd.numeric(z.number().int().min(0).optional()).optional(),
       }),
       z.object({
         _action: z.literal("delete"),
@@ -77,6 +77,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   if (!isAdmin) throw new Response("Forbidden", { status: 403 });
 
   const f = schema.parse(await request.formData());
+
+  console.log(f);
 
   if (f._action === "create") {
     const { _action, ...data } = f;

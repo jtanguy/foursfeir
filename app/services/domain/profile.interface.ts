@@ -1,6 +1,5 @@
 import DataLoader from "dataloader";
 import { NIL, v5 } from "uuid";
-import { Temporal } from "temporal-polyfill";
 
 export interface Profile {
 	user_id: string;
