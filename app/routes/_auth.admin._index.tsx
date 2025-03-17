@@ -83,7 +83,9 @@ const schema = zfd
       }),
       z.object({
         _action: z.literal("promote"),
-        "user[user_id]": zfd.text(z.string().uuid()),
+        user: z.object({
+          user_id: zfd.text(z.string().uuid()),
+        }),
         global: zfd.checkbox(),
         local: zfd.repeatableOfType(zfd.text(z.string().min(2).max(50))),
       }),
@@ -133,7 +135,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const isAdmin = await adminService.isUserSuperAdmin(user.user_id);
   if (!isAdmin) throw new Response("Forbidden", { status: 403 });
 
-  const f = schema.parse(await request.formData());
+  const data = await request.formData();
+  const f = schema.parse(data);
 
   if (f._action === "create") {
     const { _action, ...data } = f;
@@ -147,10 +150,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (f._action === "promote") {
     const allCities = await cityService.getCities();
     const newInfo: AdminInfo = f.global
-      ? { type: "global", user_id: f["user[user_id]"] }
+      ? { type: "global", user_id: f.user.user_id }
       : {
         type: "local",
-        user_id: f["user[user_id]"],
+        user_id: f.user.user_id,
         cities: allCities.filter((c) => f.local.includes(c.slug)),
       };
     await adminService.createAdmin(newInfo);
