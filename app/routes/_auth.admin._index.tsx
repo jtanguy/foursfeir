@@ -83,7 +83,7 @@ const schema = zfd
       }),
       z.object({
         _action: z.literal("promote"),
-        "user[id]": zfd.text(z.string().uuid()),
+        "user[user_id]": zfd.text(z.string().uuid()),
         global: zfd.checkbox(),
         local: zfd.repeatableOfType(zfd.text(z.string().min(2).max(50))),
       }),
@@ -147,10 +147,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (f._action === "promote") {
     const allCities = await cityService.getCities();
     const newInfo: AdminInfo = f.global
-      ? { type: "global", user_id: f["user[id]"] }
+      ? { type: "global", user_id: f["user[user_id]"] }
       : {
         type: "local",
-        user_id: f["user[id]"],
+        user_id: f["user[user_id]"],
         cities: allCities.filter((c) => f.local.includes(c.slug)),
       };
     await adminService.createAdmin(newInfo);
