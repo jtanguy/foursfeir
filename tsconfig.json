@@ -24,7 +24,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
-    "target": "ES2022",
+    "target": "ES2019",
     "strict": true,
     "allowJs": true,
     "skipLibCheck": true,
