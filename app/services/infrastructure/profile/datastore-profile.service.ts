@@ -34,7 +34,7 @@ export class DatastoreProfileService implements ProfileService {
 
 	async createProfile(data: Omit<Profile, "created_at">): Promise<Profile> {
 		const key = this.client.key([KINDS.profile]);
-		const entity = { ...data, created_at: Temporal.Now.instant() } as Profile;
+		const entity = { ...data, created_at: Temporal.Now.instant().toString() } as Profile;
 		await this.client.save({ key, data: entity });
 		this.addToCache(entity);
 		return entity;
