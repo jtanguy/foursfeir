@@ -10,6 +10,10 @@ import { DatastoreProfileService } from "../infrastructure/profile/datastore-pro
 import { DatastoreCityService } from "../infrastructure/city/datastore-city.service";
 
 export const cityService: CityService = new DatastoreCityService(client);
-export const bookingService: BookingService = new DatastoreBookingService(client);
-export const profileService: ProfileService = new DatastoreProfileService(client);
+export const bookingService: BookingService = new DatastoreBookingService(
+  client,
+);
+export const profileService: ProfileService = new DatastoreProfileService(
+  client,
+);
 export const adminService: AdminService = new DatastoreAdminService(client);

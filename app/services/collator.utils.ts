@@ -43,5 +43,6 @@ export const Collator = {
   // Profiles
   email: (a: Profile, b: Profile) => a.email.localeCompare(b.email),
   // Bookings
-  booking: <T extends Booking>(a: T, b: T) => b.created_at.epochSeconds - a.created_at.epochSeconds,
+  booking: <T extends Booking>(a: T, b: T) =>
+    b.created_at.epochSeconds - a.created_at.epochSeconds,
 };

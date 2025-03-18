@@ -2,12 +2,12 @@ import { Datastore, Key } from "@google-cloud/datastore";
 import { env } from "config";
 
 export const KINDS = {
-	city: "City",
-	date: "Date",
-	booking: "Booking",
-	profile: "Profile",
-	admin: "Admin",
-	notice: "Notice",
+  city: "City",
+  date: "Date",
+  booking: "Booking",
+  profile: "Profile",
+  admin: "Admin",
+  notice: "Notice",
 } as const;
 
 /**
@@ -17,20 +17,22 @@ export const KINDS = {
  * @property {Key} [client.KEY] - The key of the entity.
  */
 export type Entity<T> = T & {
-	[client.KEY]: Key;
+  [client.KEY]: Key;
 };
 
 const common = {
-	projectId: env.GCP_PROJECT_ID,
-	namespace: env.NAMESPACE,
+  projectId: env.GCP_PROJECT_ID,
+  namespace: env.NAMESPACE,
 };
 
 export const client = new Datastore(
-	env.GCP_PRIVATE_KEY && env.GCP_SERVICE_ACCOUNT_EMAIL ?
-		{
-			credentials: {
-				client_email: env.GCP_SERVICE_ACCOUNT_EMAIL,
-				private_key: env.GCP_PRIVATE_KEY,
-			},
-			...common
-		} : common)
+  env.GCP_PRIVATE_KEY && env.GCP_SERVICE_ACCOUNT_EMAIL
+    ? {
+        credentials: {
+          client_email: env.GCP_SERVICE_ACCOUNT_EMAIL,
+          private_key: env.GCP_PRIVATE_KEY,
+        },
+        ...common,
+      }
+    : common
+);

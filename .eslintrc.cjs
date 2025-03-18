@@ -78,6 +78,7 @@ module.exports = {
             ignoreRestSiblings: true,
           },
         ],
+        "@typescript-eslint/consistent-type-assertions": "error",
       },
     },
 
