@@ -19,6 +19,7 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: picoStyles },
   { rel: "stylesheet", href: globalStyles },
   { rel: "stylesheet", href: profileSearchStyles },
+  { rel: "manifest", href: "/manifest.json" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
