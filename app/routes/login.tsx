@@ -1,4 +1,15 @@
+import { LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { Form } from "@remix-run/react";
+import { authenticator } from "~/services/auth.server";
+
+// if the user is already logged in, redirect to home
+export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await authenticator.isAuthenticated(request);
+  if (user) {
+    return redirect("/");
+  }
+  return null;
+}
 
 export default function Login() {
   return (

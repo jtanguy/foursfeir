@@ -16,7 +16,7 @@ const googleStrategy = new GoogleStrategy<Profile>(
     callbackURL: `${env.BASE_URL ?? env.VERCEL_URL ?? "http://localhost:5173"}/auth/callback`,
   },
   async ({ profile }) => {
-    // Profule data is extracted from the Google profile. It is persisted on the first booking
+    // Profile data is extracted from the Google profile. It is persisted on the first booking
     const foursfeirProfile = {
       user_id: emailToFoursfeirId(profile.emails[0].value),
       avatar_url: profile.photos.at(0)?.value,
