@@ -55,6 +55,78 @@ details.dropdown.header-user ul li::after {
   margin-inline-start: 0.5em;
 }
 
+.dropdown.header-cities ul li {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0.5em !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
+  list-style-position: outside !important;
+  text-indent: 0 !important;
+}
+
+.dropdown.header-cities ul li a {
+  flex: 1;
+  text-align: left;
+  margin-right: 0.5em;
+  min-width: 0;
+}
+
+.dropdown.header-cities ul li .inline-form {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.dropdown.header-cities ul li .icon {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropdown ul li::after {
+  content: none !important;
+}
+
+.city-list li {
+  display: flex;
+  align-items: center;
+  padding: 0.5em;
+}
+
+.city-list li a {
+  text-align: left;
+  margin-right: 0.5em;
+}
+
+.city-list li .inline-form {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 24px;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.2em;
+}
+
+.city-list li .icon {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .avatar {
   display: inline-block;
   height: var(--avatar-size, 1.5em);
@@ -299,4 +371,58 @@ details.calendar-people[open] > *:not(summary) {
 
 .day__book svg {
   vertical-align: top;
+}
+
+/* Reponsive under 768px */
+@media (max-width: 768px) {
+  .dropdown.header-cities {
+    position: relative;
+    z-index: 1002;
+  }
+
+  .dropdown.header-user {
+    position: relative;
+    z-index: 1000;
+  }
+
+  .dropdown.header-cities ul {
+    position: absolute;
+    z-index: 1003;
+    top: 100%;
+    left: 0;
+    min-width: 200px;
+  }
+
+  .dropdown.header-user ul {
+    position: absolute;
+    z-index: 1001;
+    top: 100%;
+    right: 0;
+    left: auto;
+    min-width: 200px;
+    max-width: calc(100vw - 2rem);
+    transform: translateX(-10px); 
+  }
+
+  .header-user__name {
+    display: inline;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Reponsive under 500px */
+@media (max-width: 500px) {
+  .header-user__name {
+    display: none;
+  }
+}
+
+/* Reponsive under 360px */
+@media (max-width: 360px) {
+  nav[aria-label="breadcrumb"] ul li:first-child {
+    display: none;
+  }
 }

@@ -45,6 +45,7 @@ export class DatastoreProfileService implements ProfileService {
       email: entity.email,
       full_name: entity.full_name,
       avatar_url: entity.avatar_url,
+      favorite_city: entity.favorite_city,
     };
   }
 

@@ -23,17 +23,34 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   });
 };
 
-const actionSchema = zfd.formData({
-  _action: z.literal("refresh"),
-});
+const actionSchema = zfd.formData(
+  z.discriminatedUnion("_action", [
+    z.object({
+      _action: z.literal("favorite"),
+      city_slug: zfd.text(z.string()),
+    }),
+    z.object({
+      _action: z.literal("refresh"),
+    }),
+  ]),
+);
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  await getUserFromRequest(request);
+  const user = await getUserFromRequest(request);
+  const f = actionSchema.parse(await request.formData());
 
-  actionSchema.parse(await request.formData());
-  console.log("Invalidation fuse profiles");
+  if (f._action === "refresh") {
+    console.log("Invalidation fuse profiles");
+    profileService.clearProfileCache();
+  }
 
-  profileService.clearProfileCache();
+  if (f._action === "favorite") {
+    const profile = await profileService.getProfileById(user.user_id)
+    await profileService.updateProfile({
+      user_id: user.user_id,
+      favorite_city: f.city_slug === profile?.favorite_city ? undefined : f.city_slug //Favorite / Unfavorite
+    });
+  }
 
   return new Response(null, { status: 204 });
 };
