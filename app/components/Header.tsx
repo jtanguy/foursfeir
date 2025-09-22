@@ -27,17 +27,7 @@ export function Header({ breadcrumbs, user, admin, cities, favoriteCity }: Heade
             const isLast = index === arr.length - 1;
             return (
               <li key={index} aria-current={isLast ? "page" : "false"}>
-                <details className="dropdown header-cities">
-                  <summary>{crumb}</summary>
-                  <ul>
-                    {cities.map(city => (
-                      <li key={city.slug}>
-                        <Link to={`/${city.slug}`}>{city.label}</Link>
-                        <FavoriteCityForm city={city.slug} isFavorite={city.slug === favoriteCity}/>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
+                {crumb}
               </li>
             );
           })}

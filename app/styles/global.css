@@ -56,16 +56,16 @@ details.dropdown.header-user ul li::after {
 }
 
 .dropdown.header-cities ul li {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  padding: 0.5em !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5em;
+  margin-left: 0;
+  margin-right: 0;
   margin-inline-start: 0 !important;
-  margin-inline-end: 0 !important;
-  list-style-position: outside !important;
-  text-indent: 0 !important;
+  margin-inline-end: 0;
+  list-style-position: outside;
+  text-indent: 0;
 }
 
 .dropdown.header-cities ul li a {
@@ -84,8 +84,8 @@ details.dropdown.header-user ul li::after {
 }
 
 .dropdown.header-cities ul li .icon {
-  margin: 0 !important;
-  padding: 0 !important;
+  margin: 0;
+  padding: 0;
   width: 20px;
   height: 20px;
   display: flex;
@@ -94,7 +94,7 @@ details.dropdown.header-user ul li::after {
 }
 
 .dropdown ul li::after {
-  content: none !important;
+  content: none;
 }
 
 .city-list li {
@@ -118,8 +118,8 @@ details.dropdown.header-user ul li::after {
 }
 
 .city-list li .icon {
-  margin: 0 !important;
-  padding: 0 !important;
+  margin: 0;
+  padding: 0;
   width: 20px;
   height: 20px;
   display: flex;
