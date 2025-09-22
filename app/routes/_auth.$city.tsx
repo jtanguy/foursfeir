@@ -34,19 +34,6 @@ export default function City() {
       
       <main className="container">
         <h1> Réservations à {label}</h1>
-        <details className="dropdown header-cities">
-          <summary>
-            Choisir ma ville
-          </summary>
-          <ul className="city-list">
-            {cities.map(city => (
-              <li key={city.slug}>
-                <Link to={`/${city.slug}`}>{city.label}</Link>
-                <FavoriteCityForm city={city.slug} isFavorite={city.slug === favoriteCity}/>
-              </li>
-            ))}
-          </ul>
-        </details>
         <Outlet />
       </main>
     </>
@@ -54,10 +41,10 @@ export default function City() {
 }
 
 type LoaderData = {
-    cities: Array<{ slug: string; label: string }>;
-    city: string;
-    favoriteCity: string | null;
-  };
+  cities: Array<{ slug: string; label: string }>;
+  city: string;
+  favoriteCity: string | null;
+};
 
 export const handle = {
   breadcrumb: (match: UIMatch<LoaderData>) =>  (
