@@ -4,17 +4,15 @@ import { FiLogOut } from "react-icons/fi";
 import { AdminInfo } from "~/services/domain/admin.interface";
 import { City } from "~/services/domain/city.interface";
 import { Profile } from "~/services/domain/profile.interface";
-import { FavoriteCityForm } from "./FavoriteCityForm";
 
 type HeaderProps = {
   breadcrumbs: ReactNode[];
   user: Profile;
   admin: AdminInfo | null;
   cities: City[];
-  favoriteCity?: string;
 };
 
-export function Header({ breadcrumbs, user, admin, cities, favoriteCity }: HeaderProps) {
+export function Header({ breadcrumbs, user, admin, cities }: HeaderProps) {
   return (
     <header className="header header-flex container-fluid">
       <nav aria-label="breadcrumb">
