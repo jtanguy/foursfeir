@@ -31,7 +31,7 @@ export default function City() {
 
   return (
     <>
-      
+
       <main className="container">
         <h1> Réservations à {label}</h1>
         <Outlet />
@@ -47,24 +47,7 @@ type LoaderData = {
 };
 
 export const handle = {
-  breadcrumb: (match: UIMatch<LoaderData>) =>  (
-    <div>
-      <details className="dropdown header-cities">
-        <summary>
-          <Link to={match.pathname}>{match.params.city}</Link>
-        </summary>
-        <ul className="city-list">
-          {match.data?.cities?.map(city => (
-            <li key={city.slug}>
-              <Link to={`/${city.slug}`}>{city.label}</Link>
-              <FavoriteCityForm 
-                city={city.slug} 
-                isFavorite={city.slug === match.data?.favoriteCity}
-              />
-            </li>
-          ))}
-        </ul>
-      </details>
-    </div>
+  breadcrumb: (match: UIMatch<LoaderData>) => (
+    <Link to={match.pathname}>{match.params.city}</Link>
   ),
 };

@@ -1,15 +1,18 @@
 .sr-only {
   border: 0 !important;
-  clip: rect(1px, 1px, 1px, 1px) !important; /* 1 */
+  clip: rect(1px, 1px, 1px, 1px) !important;
+  /* 1 */
   -webkit-clip-path: inset(50%) !important;
-  clip-path: inset(50%) !important; /* 2 */
+  clip-path: inset(50%) !important;
+  /* 2 */
   height: 1px !important;
   margin: -1px !important;
   overflow: hidden !important;
   padding: 0 !important;
   position: absolute !important;
   width: 1px !important;
-  white-space: nowrap !important; /* 3 */
+  white-space: nowrap !important;
+  /* 3 */
 }
 
 body {
@@ -134,6 +137,7 @@ details.dropdown.header-user ul li::after {
   border-radius: 50%;
   vertical-align: text-top;
 }
+
 .avatar--huge {
   --avatar-size: 5rem;
 }
@@ -158,6 +162,7 @@ button.icon:active,
 button.icon:focus {
   --color: var(--contrast);
 }
+
 button.danger {
   --color: var(--pico-del-color);
 }
@@ -185,8 +190,13 @@ main.container {
 .calendar--compact {
   --pico-spacing: 1ex;
 }
+
 .calendar--compact th {
   /* width: 1ch; */
+}
+
+.center-content {
+  align-self: center;
 }
 
 .calendar-day {
@@ -203,7 +213,7 @@ main.container {
   border-inline-start: 0.2rem solid var(--pico-primary-hover);
 }
 
-.calendar-day--end-of-week + .calendar-day {
+.calendar-day--end-of-week+.calendar-day {
   margin-block-start: 3em;
 }
 
@@ -281,7 +291,7 @@ button.inline-button {
   }
 }
 
-details.calendar-people[open] > *:not(summary) {
+details.calendar-people[open]>*:not(summary) {
   animation: details-show 150ms ease-out;
 }
 
@@ -335,7 +345,7 @@ details.calendar-people[open] > *:not(summary) {
   list-style: none;
 }
 
-.calendar-people__list .avatar + span {
+.calendar-people__list .avatar+span {
   margin-inline-start: 1ex;
 }
 
@@ -344,7 +354,7 @@ details.calendar-people[open] > *:not(summary) {
   border-bottom: none;
 }
 
-.calendar-people__list--inline li + li {
+.calendar-people__list--inline li+li {
   margin-inline-start: -0.5ex;
 }
 
@@ -401,7 +411,7 @@ details.calendar-people[open] > *:not(summary) {
     left: auto;
     min-width: 200px;
     max-width: calc(100vw - 2rem);
-    transform: translateX(-10px); 
+    transform: translateX(-10px);
   }
 
   .header-user__name {
