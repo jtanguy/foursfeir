@@ -3,7 +3,8 @@ import { authenticator } from "~/services/auth.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   return authenticator.authenticate("google", request, {
-    successRedirect: "/",
+    // /login Loader is handling redirection after authentication
+    successRedirect: "/login",
     failureRedirect: "/login",
   });
 }

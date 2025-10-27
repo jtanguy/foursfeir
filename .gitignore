@@ -6,4 +6,18 @@ node_modules
 
 scripts/data/*
 
+/build/
+/public/build
+/api/index.js
+/api/index.js.map
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
 .direnv
+
+# pre-commit
+.pre-commit-config.yaml
+

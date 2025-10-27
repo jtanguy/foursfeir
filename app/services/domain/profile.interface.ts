@@ -7,6 +7,7 @@ export interface Profile {
   full_name: string;
   avatar_url?: string;
   created_at?: string;
+  favorite_city?: string;
 }
 
 export interface ProfileService {

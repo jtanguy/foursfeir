@@ -5,7 +5,7 @@ import type { RouteMatch } from "react-router";
 import { ReactNode } from "react";
 import { Header } from "~/components/Header";
 import { getUserFromRequest } from "~/services/auth.server";
-import { adminService, cityService } from "~/services/application/services.server";
+import { adminService, cityService, profileService } from "~/services/application/services.server";
 
 type Crumb = {
   breadcrumb: (match: RouteMatch) => ReactNode;
@@ -13,16 +13,17 @@ type Crumb = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await getUserFromRequest(request);
+  const profile = await profileService.getProfileById(user.user_id);
 
   const [admin, cities] = await Promise.all([
     adminService.getAdminInfo(user.user_id),
     cityService.getCities(),
   ]);
-  return json({ user, cities, admin });
+  return json({ user, cities, admin, profile });
 }
 
 export default function Layout() {
-  const { user, cities, admin } = useLoaderData<typeof loader>();
+  const { user, cities, admin, profile } = useLoaderData<typeof loader>();
   const matches = useMatches();
 
   const breadcrumbs: ReactNode[] = matches
@@ -41,6 +42,7 @@ export default function Layout() {
         user={user}
         cities={cities}
         admin={admin}
+        favoriteCity={profile?.favorite_city}
       />
       <Outlet />
     </>

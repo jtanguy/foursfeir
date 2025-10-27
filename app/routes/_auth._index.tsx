@@ -2,19 +2,22 @@ import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 import { getUserFromRequest } from "~/services/auth.server";
-import { cityService } from "~/services/application/services.server";
+import { cityService, profileService } from "~/services/application/services.server";
+import { FavoriteCityForm } from "~/components/FavoriteCityForm";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await getUserFromRequest(request);
+  const user = await getUserFromRequest(request);
   const cities = await cityService.getCities();
+  const profile = await profileService.getProfileById(user.user_id);
 
   return json({
     cities: cities ?? [],
+    favoriteCity: profile?.favorite_city ?? null
   });
 };
 
 export default function Index() {
-  const { cities } = useLoaderData<typeof loader>();
+  const { cities, favoriteCity } = useLoaderData<typeof loader>();
 
   return (
     <>
@@ -23,12 +26,15 @@ export default function Index() {
           <hgroup>
             <h1>Welcome to FourSFEIR</h1>
           </hgroup>
-          <ul>
-            {cities.map((city) => (
-              <li key={city.slug}>
-                <Link to={`/${city.slug}`}>{city.label}</Link>
-              </li>
-            ))}
+          <ul className="city-list">
+            {cities.map((city) => {
+                return (
+                  <li key={city.slug}>
+                    <Link to={`/${city.slug}`}>{city.label}</Link>
+                    <FavoriteCityForm city={city.slug} isFavorite={city.slug === favoriteCity}/>
+                  </li>
+                );
+              })}
           </ul>
         </div>
       </main>

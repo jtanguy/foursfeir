@@ -1,8 +1,9 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import type { LoaderFunctionArgs, MetaFunction, SerializeFrom } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Link, Outlet, useLoaderData } from "@remix-run/react";
+import { Link, Outlet, useLoaderData, UIMatch } from "@remix-run/react";
 import { RouteMatch } from "react-router";
-import { cityService } from "~/services/application/services.server";
+import { FavoriteCityForm } from "~/components/FavoriteCityForm";
+import { cityService, profileService } from "~/services/application/services.server";
 import { getUserFromRequest } from "~/services/auth.server";
 import invariant from "~/services/validation.utils.server";
 
@@ -13,18 +14,24 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => [
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   invariant(params.city, "No city given");
   await getUserFromRequest(request);
+  const cities = await cityService.getCities();
   const city = await cityService.getCity(params.city);
+  const user = await getUserFromRequest(request);
+  const profile = await profileService.getProfileById(user.user_id);
 
   return json({
+    cities: cities ?? [],
     city: city.label ?? params.city,
+    favoriteCity: profile?.favorite_city ?? null
   });
 };
 
 export default function City() {
-  const { city: label } = useLoaderData<typeof loader>();
+  const { cities, city: label, favoriteCity } = useLoaderData<typeof loader>();
 
   return (
     <>
+
       <main className="container">
         <h1> Réservations à {label}</h1>
         <Outlet />
@@ -33,8 +40,14 @@ export default function City() {
   );
 }
 
+type LoaderData = {
+  cities: Array<{ slug: string; label: string }>;
+  city: string;
+  favoriteCity: string | null;
+};
+
 export const handle = {
-  breadcrumb: (match: RouteMatch) => (
+  breadcrumb: (match: UIMatch<LoaderData>) => (
     <Link to={match.pathname}>{match.params.city}</Link>
   ),
 };
